@@ -166,6 +166,11 @@ class SNPDistribution:
         x,
         fit_loc: bool = True,
         fit_scale: bool = True,
+        loc_scale_fn=None,
+        loc_scale_params0=None,
+        loc_scale_bounds=None,
+        loc_scale_kwargs=None,
+        return_opt_result: bool = False,
         **kwargs,
     ):        
         x = np.asarray(x, dtype=float).reshape(-1)
@@ -174,19 +179,26 @@ class SNPDistribution:
             K=self.K,
             fit_loc=fit_loc,
             fit_scale=fit_scale,
+            loc_scale_fn=loc_scale_fn,
+            loc_scale_params0=loc_scale_params0,
+            loc_scale_bounds=loc_scale_bounds,
+            loc_scale_kwargs=loc_scale_kwargs,
             **kwargs,
         )
         
         loc_fit = res.get("loc", None)
-        if loc_fit is None :
+        if loc_fit is None:
             # fallback
             loc_fit = float(np.mean(x))
         
         scale_fit = res.get("scale", None)
-        if scale_fit is None :
+        if scale_fit is None:
             # fallback
             scale_fit = float(np.std(x, ddof=1))
 
+        if return_opt_result:
+            # allow callers to access external_params / optimizer details
+            return res
         # returns a tuple as scipy's fit method does
         return (res["c"], loc_fit, scale_fit)
     

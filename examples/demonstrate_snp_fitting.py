@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import stats
 
-from snpdenspy.util.diagnose.diagnose_fits_summary_and_plots import diagnose_snp_fits
+from snpdenspy.util.diagnose.diagnose_fit import diagnose_fit
 
 def _sample_gaussian_mixture(mus, sigmas, weights, nsamples, rng=None):
     """
@@ -100,10 +100,11 @@ if __name__ == "__main__":
 
     for name, sampler, pdf_func in distributions:
         print(f"\n=== {name} ===")
-        diagnose_snp_fits(
+        diagnose_fit(
             sample_func=sampler,
-            pdf_func=pdf_func,
+            pdf_original_func=pdf_func,
             K=5,
+            method='mle', 
             fit_loc_scale=True,
             nsamples=4000,
             rng=rng,

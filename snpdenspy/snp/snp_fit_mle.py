@@ -5,6 +5,8 @@ from scipy.optimize import minimize
 from snpdenspy.hermite.hermite_funcs import hermite_polys_eval
 from snpdenspy.snp.snp_eval_functions import snp_norm_constant
 
+ArrayLike = np.ndarray
+
 
 def _build_minimize_options(verbose: bool, minimize_kwargs: dict) -> dict:
     """
@@ -74,6 +76,42 @@ def _loglik_and_grad_full(x, c, loc, scale, poly_floor: float):
     return loglik, grad_c, float(grad_loc), float(grad_scale)
 
 
+def _loglik_no_grad(
+    x: ArrayLike,
+    c: ArrayLike,
+    loc: ArrayLike,
+    scale: ArrayLike,
+    poly_floor: float,
+) -> float:
+    """
+    Log-likelihood only (no gradients) with support for per-observation loc/scale.
+    """
+    x = np.asarray(x, dtype=float).reshape(-1)
+    c = np.asarray(c, dtype=float).reshape(-1)
+    loc = np.asarray(loc, dtype=float)
+    scale = np.asarray(scale, dtype=float)
+
+    if scale.shape not in ((), (1,)) and scale.size not in (1, x.size):
+        raise ValueError("scale must be scalar or match x shape.")
+    if loc.shape not in ((), (1,)) and loc.size not in (1, x.size):
+        raise ValueError("loc must be scalar or match x shape.")
+
+    if np.any(scale <= 0.0):
+        raise ValueError("scale must be positive.")
+
+    z = (x - loc) / scale
+    H = hermite_polys_eval(c.size, z)  # shape: (K+1, n)
+
+    poly = 1.0 + np.dot(c, H[1:])  # 1 + sum c_k H_{k+1}(z)
+    poly_safe = np.where(np.abs(poly) < poly_floor, poly_floor * np.sign(poly + 1e-12), poly)
+
+    log_phi = -0.5 * z * z - 0.5 * math.log(2.0 * math.pi)
+    log_Z = math.log(snp_norm_constant(c))
+
+    log_pdf = -np.log(scale) + log_phi + 2.0 * np.log(np.abs(poly_safe)) - log_Z
+    return float(np.sum(log_pdf))
+
+
 def snp_neg_log_likelihood_and_grad(
     params,
     x,
@@ -106,6 +144,10 @@ def snp_fit_mle(
     K: int,
     fit_loc: bool = True,
     fit_scale: bool = True,
+    loc_scale_fn=None,
+    loc_scale_params0=None,
+    loc_scale_bounds=None,
+    loc_scale_kwargs=None,
     method: str = "L-BFGS-B",
     poly_floor: float = 1e-12,
     initial_c=None,
@@ -123,67 +165,117 @@ def snp_fit_mle(
     if K <= 0:
         raise ValueError("K must be a positive integer.")
 
+    use_external_loc_scale = loc_scale_fn is not None
+
     c0 = np.zeros(K, dtype=float) if initial_c is None else np.asarray(initial_c, dtype=float).reshape(-1)
     if c0.size != K:
         raise ValueError(f"Expected {K} initial c coefficients, got {c0.size}.")
 
-    loc0 = float(np.mean(x)) if initial_loc is None else float(initial_loc)
-    scale0 = float(np.std(x, ddof=1)) if initial_scale is None else float(initial_scale)
-    if scale0 <= 0.0:
-        raise ValueError("Initial scale must be positive.")
+    loc_scale_kwargs = {} if loc_scale_kwargs is None else dict(loc_scale_kwargs)
 
-    params0 = [c0]
-    loc_fixed = loc0
-    scale_fixed = scale0
-    if fit_loc:
-        params0.append(np.array([loc0], dtype=float))
-    if fit_scale:
-        params0.append(np.array([scale0], dtype=float))
-    p0 = np.concatenate(params0)
+    if use_external_loc_scale:
+        if loc_scale_params0 is None:
+            raise ValueError("loc_scale_params0 must be provided when loc_scale_fn is used.")
+        loc_scale_params0 = np.asarray(loc_scale_params0, dtype=float).reshape(-1)
+        p0 = np.concatenate([c0, loc_scale_params0])
+    else:
+        loc0 = float(np.mean(x)) if initial_loc is None else float(initial_loc)
+        scale0 = float(np.std(x, ddof=1)) if initial_scale is None else float(initial_scale)
+        if scale0 <= 0.0:
+            raise ValueError("Initial scale must be positive.")
 
-    bounds = []
-    bounds.extend([(None, None)] * K)
-    if fit_loc:
-        bounds.append((None, None))
-    if fit_scale:
-        bounds.append((1e-10, None))
+        params0 = [c0]
+        loc_fixed = loc0
+        scale_fixed = scale0
+        if fit_loc:
+            params0.append(np.array([loc0], dtype=float))
+        if fit_scale:
+            params0.append(np.array([scale0], dtype=float))
+        p0 = np.concatenate(params0)
 
-    def objective(p):
-        return snp_neg_log_likelihood_and_grad(
-            p,
-            x=x,
+    if use_external_loc_scale:
+        bounds = []
+        bounds.extend([(None, None)] * K)
+        if loc_scale_bounds is None:
+            bounds.extend([(None, None)] * loc_scale_params0.size)
+        else:
+            if len(loc_scale_bounds) != loc_scale_params0.size:
+                raise ValueError("loc_scale_bounds length must match loc_scale_params0.")
+            bounds.extend(list(loc_scale_bounds))
+
+        def objective_external(p):
+            c_vec = p[:K]
+            theta = p[K:]
+            loc, scale = loc_scale_fn(theta, x, **loc_scale_kwargs)
+            return -_loglik_no_grad(x=x, c=c_vec, loc=loc, scale=scale, poly_floor=poly_floor)
+
+        res = minimize(
+            objective_external,
+            p0,
+            method=method,
+            jac=False,
+            bounds=bounds if bounds else None,
+            options=_build_minimize_options(verbose=verbose, minimize_kwargs=minimize_kwargs),
+            **minimize_kwargs
+        )
+
+        c_hat = res.x[:K]
+        theta_hat = res.x[K:]
+        loc_hat, scale_hat = loc_scale_fn(theta_hat, x, **loc_scale_kwargs)
+
+        return {
+            "c": c_hat,
+            "loc": loc_hat,
+            "scale": scale_hat,
+            "external_params": theta_hat,
+            "success": bool(res.success),
+            "message": res.message,
+            "opt_result": res,
+        }
+    else:
+        bounds = []
+        bounds.extend([(None, None)] * K)
+        if fit_loc:
+            bounds.append((None, None))
+        if fit_scale:
+            bounds.append((1e-10, None))
+
+        def objective(p):
+            return snp_neg_log_likelihood_and_grad(
+                p,
+                x=x,
+                K=K,
+                fit_loc=fit_loc,
+                fit_scale=fit_scale,
+                loc_fixed=loc_fixed,
+                scale_fixed=scale_fixed,
+                poly_floor=poly_floor,
+            )
+
+        res = minimize(
+            objective,
+            p0,
+            method=method,
+            jac=True,
+            bounds=bounds if bounds else None,
+            options=_build_minimize_options(verbose=verbose, minimize_kwargs=minimize_kwargs),
+            **minimize_kwargs
+        )
+
+        c_hat, loc_hat, scale_hat = _unpack_params(
+            res.x,
             K=K,
             fit_loc=fit_loc,
             fit_scale=fit_scale,
             loc_fixed=loc_fixed,
             scale_fixed=scale_fixed,
-            poly_floor=poly_floor,
         )
 
-    res = minimize(
-        objective,
-        p0,
-        method=method,
-        jac=True,
-        bounds=bounds if bounds else None,
-        options=_build_minimize_options(verbose=verbose, minimize_kwargs=minimize_kwargs),
-        **minimize_kwargs
-    )
-
-    c_hat, loc_hat, scale_hat = _unpack_params(
-        res.x,
-        K=K,
-        fit_loc=fit_loc,
-        fit_scale=fit_scale,
-        loc_fixed=loc_fixed,
-        scale_fixed=scale_fixed,
-    )
-
-    return {
-        "c": c_hat,
-        "loc": loc_hat if fit_loc else loc_fixed,
-        "scale": scale_hat if fit_scale else scale_fixed,
-        "success": bool(res.success),
-        "message": res.message,
-        "opt_result": res,
-    }
+        return {
+            "c": c_hat,
+            "loc": loc_hat if fit_loc else loc_fixed,
+            "scale": scale_hat if fit_scale else scale_fixed,
+            "success": bool(res.success),
+            "message": res.message,
+            "opt_result": res,
+        }
