@@ -21,10 +21,10 @@ f(z) = \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z}
 $$
 
 where:
-- $` \phi(z) `$ is the standard normal density: $ \phi(z) = \frac{1}{\sqrt{2\pi}} e^{-z^2/2} $
-- $ H_k(z) $ are the probabilistic Hermite polynomials (orthogonal with respect to $ \phi(z) $)
-- $ c_k $ are real-valued coefficients
-- $ Z $ is the normalizing constant ensuring the density integrates to 1: $ Z = 1 + \sum_{k=1}^{K} c_k^2 (k+1)! $
+- $` \phi(z) `$ is the standard normal density: $` \phi(z) = \frac{1}{\sqrt{2\pi}} e^{-z^2/2} `$
+- $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$)
+- $` c_k `$ are real-valued coefficients
+- $` Z `$ is the normalizing constant ensuring the density integrates to 1: $` Z = 1 + \sum_{k=1}^{K} c_k^2 (k+1)! `$
 
 This formulation allows for flexible density shapes while maintaining analytical tractability.
 
@@ -45,7 +45,7 @@ Key features:
 This is the general implementation, supporting an arbitrary number of Hermite coefficients. It does not inherit from `rv_continuous` but provides similar functionality through methods like `pdf`, `cdf`, `ppf`, and `rvs`. It includes both moment-matching and maximum likelihood estimation (MLE) fitting methods.
 
 Key features:
-- Arbitrary number of coefficients ($ K $)
+- Arbitrary number of coefficients ($` K `$)
 - Moment-matching and MLE fitting
 - Flexible parameter estimation options appropiated for time series analysis.
 - Frozen distribution instances via `freeze()` method
