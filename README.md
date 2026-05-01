@@ -16,7 +16,7 @@ and the implementation of this package is mainly based on
 
 The package implements the theoretical framework described in the paper and does not introduce new methodological contributions. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions.
 
-## Mathematical Formulation
+## Summary of the Mathematical Formulation
 
 The SNP density is formulated as an expansion of the standard normal density using probabilistic Hermite polynomials. For a standardized variable $`z`$, the density is given by:
 
@@ -40,7 +40,7 @@ This formulation allows for flexible density shapes and efficient evaluation whi
 
 SNP distributions offer several key benefits:
 
-- **Semiparametric Nature**: Combines parametric simplicity with nonparametric flexibility, allowing for rich density shapes without overfitting.
+- **Flexibility as with nonparametric approaches**: Allow for general and rich density shapes, without overfitting when the number of coefficients is low.
 - **Analytical Properties**: Closed-form expressions for PDF, CDF, and moments.
 - **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
 - **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the Edgeworth-Sargan family of densities, whose coefficients have a clear statistical interpretations related to density deviations from normality.
@@ -51,7 +51,7 @@ SNP distributions offer several key benefits:
 
 ## SNPSimpleDistribution
 
-This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($` c_1 `$ to $` c_5 `$) and implements standard methods like `pdf`, `cdf`, `ppf`, and `rvs`. However, it does not include overriden fitting algorithms.
+This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($` c_1 `$ to $` c_5 `$) and implements standard methods like `pdf`, `cdf`, `ppf`, and `rvs`. However, it does not include overriden fitting algorithms, so the `fit()` method rely on `rv_continuous` implementation (`_logpdf()` is implemented).
 
 Key features:
 - Inherits from `rv_continuous` for compatibility
@@ -68,8 +68,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 
-import sys
-import os
 from snpdenspy.snp.snp_rv_continuous import SNPSimpleDistribution
 
 # Create distribution with 5 coefficients
@@ -111,15 +109,79 @@ The code generates the following plot:
 This is the general implementation, supporting an arbitrary number of Hermite coefficients. It does not inherit from `rv_continuous` but provides similar functionality through methods like `pdf`, `cdf`, `ppf`, and `rvs`. It includes both moment-matching and maximum likelihood estimation (MLE) fitting methods.
 
 Key features:
-- Arbitrary number of coefficients ($` K `$)
-- Moment-matching and MLE fitting
+- Arbitrary number of coefficients ($` K `$).
+- Moment-matching and MLE fittings.
 - Flexible parameter estimation options appropiated for time series analysis.
-- Frozen distribution instances via `freeze()` method
+- Frozen distribution instances via `freeze()` method.
 
 ## Sampling Method
 
-The package implements an efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in the cited paper from Gallant and Tauchen 1990. The method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high numbers of coefficients.
+The package implements an efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in the cited paper from Gallant & Tauchen 1990. The method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high numbers of coefficients.
 
+THe sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example and highlight its superior performance versus inverting the CDF via root-finding. It also shows how SNP densities can describe bi-modal oness as well.
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+
+import matplotlib.pyplot as plt
+import numpy as np
+import time
+
+import sys
+sys.path.insert(0, "C:\\Github\\snpdenspy\\snpdenspy")
+
+from snpdenspy.snp.snp_distribution import SNPDistribution
+from snpdenspy.util.diagnose.equal_distribution_plots import (
+    qqplot_with_bootstrap_bands,
+    ecdfs_with_bands
+)
+
+snp_dist = SNPDistribution(K=5)
+
+# Example coefficients to create a bimodal shape
+c_arr = [0.5, -0.8, 0.2, 0.0, 0.0]
+loc, scale = 12, 5
+frozen_dist = snp_dist(c=c_arr, loc=loc, scale=scale)
+
+# Simulate random variates and plot histogram ---
+nsamples = 5000
+    
+start_time = time.time()
+samples_inv_cdf = frozen_dist.rvs(size=nsamples, method="icdf")
+end_time = time.time()
+elapsed = (end_time - start_time) / 60
+print(f"Time taken to generate {nsamples} samples via root-finding: {elapsed:.4f} minutes")
+
+start_time = time.time()
+samples_accept_reject = frozen_dist.rvs(size=nsamples, method="ar")
+end_time = time.time()
+elapsed = (end_time - start_time) / 60
+print(f"Time taken to generate {nsamples} samples via accept-reject: {elapsed:.4f} minutes")
+
+# Evaluate PDF on a grid and plot histogram ---
+xs = np.linspace(-28, 40, 500)
+pdf_vals = frozen_dist.pdf(xs)
+
+plt.figure(figsize=(8,4))
+plt.hist(samples_inv_cdf, bins=50, density=True, alpha=0.6, color="orange", label="Inverse CDF via root-finding")
+plt.hist(samples_accept_reject, bins=50, density=True, alpha=0.6, color="red", label="Accep-reject")
+plt.plot(xs, pdf_vals, label="PDF", color="blue", lw=2)
+plt.title("SNPDistribution (3 coefficients) - Random variates vs PDF", fontsize=16)
+plt.xlabel("x", fontsize=14)
+plt.ylabel("Density", fontsize=14)
+plt.legend(fontsize=13)
+plt.show()
+```
+
+The results of the execution of the code are: 
+```python
+Time taken to generate 5000 samples via root-finding: 0.3521 minutes
+Time taken to generate 5000 samples via accept-reject: 0.0481 minutes
+```
+![alt text](https://github.com/acruzgarcia/snpdenspy/blob/main/images/SamplingExamples.png)
+ 
 ## Fitting Methods
 
 ### Moment Matching
