@@ -103,7 +103,7 @@ plt.show()
 ```
 The code generates the following plot:
 
-![alt text](https://github.com/acruzgarcia/snpdenspy/blob/main/images/SNPSimpleExample1.png.png)
+![alt text](https://github.com/acruzgarcia/snpdenspy/blob/main/images/SNPSimpleExample1.png)
 
 ## SNPDistribution
 
