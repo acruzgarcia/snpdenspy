@@ -21,7 +21,7 @@ f(z) = \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z}
 $$
 
 where:
-- $ \phi(z) $ is the standard normal density: $ \phi(z) = \frac{1}{\sqrt{2\pi}} e^{-z^2/2} $
+- $` \phi(z) `$ is the standard normal density: $ \phi(z) = \frac{1}{\sqrt{2\pi}} e^{-z^2/2} $
 - $ H_k(z) $ are the probabilistic Hermite polynomials (orthogonal with respect to $ \phi(z) $)
 - $ c_k $ are real-valued coefficients
 - $ Z $ is the normalizing constant ensuring the density integrates to 1: $ Z = 1 + \sum_{k=1}^{K} c_k^2 (k+1)! $
