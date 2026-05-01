@@ -1,9 +1,10 @@
 import math
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import minimize, NonlinearConstraint
 
 from snpdenspy.hermite.hermite_funcs import hermite_polys_eval
 from snpdenspy.snp.snp_eval_functions import snp_norm_constant
+from snpdenspy.snp.snp_moments import snp_standardized_raw_moments_from_c
 
 ArrayLike = np.ndarray
 
@@ -112,6 +113,16 @@ def _loglik_no_grad(
     return float(np.sum(log_pdf))
 
 
+def _std_moment_constraints_from_c(c: ArrayLike) -> np.ndarray:
+    """
+    Return [mean, variance] of the standardized SNP distribution implied by c.
+    """
+    m = snp_standardized_raw_moments_from_c(np.asarray(c, dtype=float), r_max=2)
+    mean = float(m[1])
+    var = float(m[2] - m[1] ** 2)
+    return np.array([mean, var], dtype=float)
+
+
 def snp_neg_log_likelihood_and_grad(
     params,
     x,
@@ -144,6 +155,7 @@ def snp_fit_mle(
     K: int,
     fit_loc: bool = True,
     fit_scale: bool = True,
+    constrain_std_moments: bool = False,
     loc_scale_fn=None,
     loc_scale_params0=None,
     loc_scale_bounds=None,
@@ -159,13 +171,22 @@ def snp_fit_mle(
     """
     Maximum likelihood fit for SNP coefficients (and optionally loc/scale).
 
-    Returns a dict mirroring fit_moment_matching.
     """
     x = np.asarray(x, dtype=float).reshape(-1)
     if K <= 0:
         raise ValueError("K must be a positive integer.")
 
     use_external_loc_scale = loc_scale_fn is not None
+
+    constraints = None
+    if constrain_std_moments:
+        constraints = NonlinearConstraint(
+            lambda p: _std_moment_constraints_from_c(p[:K]),
+            lb=np.array([0.0, 1.0], dtype=float),
+            ub=np.array([0.0, 1.0], dtype=float),
+        )
+        if method == "L-BFGS-B":
+            method = "trust-constr"
 
     c0 = np.zeros(K, dtype=float) if initial_c is None else np.asarray(initial_c, dtype=float).reshape(-1)
     if c0.size != K:
@@ -215,6 +236,7 @@ def snp_fit_mle(
             method=method,
             jac=False,
             bounds=bounds if bounds else None,
+            constraints=constraints,
             options=_build_minimize_options(verbose=verbose, minimize_kwargs=minimize_kwargs),
             **minimize_kwargs
         )
@@ -258,6 +280,7 @@ def snp_fit_mle(
             method=method,
             jac=True,
             bounds=bounds if bounds else None,
+            constraints=constraints,
             options=_build_minimize_options(verbose=verbose, minimize_kwargs=minimize_kwargs),
             **minimize_kwargs
         )

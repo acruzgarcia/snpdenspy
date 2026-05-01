@@ -29,31 +29,38 @@ def ar1_gaussian_mle(x):
 
 if __name__ == "__main__":
     
+    from scipy.stats import t
+    from snpdenspy.util.diagnose.diagnose_fit import diagnose_fit
+
     # Parameters
-    phi = 0.8
-    sigma = 2.0
-    # Symmetric coefficients to keep unimodal shape with heavier tails.
-    c_arr = [0.0, 0.35, 0.0]
+    phi = 0.7
+    sigma = 0.2
     nsamples = 10000
 
+    # Generate noise
+    np.random.seed(42)
+    noise = t.rvs(df=3, size=nsamples)
+    noise = (noise - noise.mean()) / noise.std(ddof=0)
+    
     # First simulate the distribution according to the parameters
-    snp_noise = SNPDistribution(K=3)(c=c_arr).rvs(size=nsamples, method='ar')
-    x = np.zeros(shape=(snp_noise.shape))
-    x[0] = snp_noise[0]
+    x = np.zeros(shape=(noise.shape))
+    x[0] = noise[0]
     for i in range(1, len(x)):
-        x[i] = phi*x[i-1] + sigma * snp_noise[i]
+        x[i] = phi*x[i-1] + sigma * noise[i]
 
     phi_norm, sigma_norm = ar1_gaussian_mle(x)
     print(f"Normal-noise AR(1) MLE: phi={phi_norm:.4f}, sigma={sigma_norm:.4f}")
 
     # Now, we fit
-    dist = SNPDistribution(K=3)
+    K = 6
+    dist = SNPDistribution(K=K)
     theta0 = np.array([0.1, np.log(np.std(x, ddof=1))])
 
     res = dist.fit_mle(
         x=x,
         fit_loc=False, fit_scale=False,          # loc/scale driven by model
         loc_scale_fn=ar1_loc_scale,
+        constrain_std_moments=True,
         loc_scale_params0=theta0,
         return_opt_result=True,
         method="L-BFGS-B",
@@ -64,6 +71,8 @@ if __name__ == "__main__":
     loc_hat, scale_hat = res["loc"], res["scale"]
     print(f"SNP-noise AR(1) MLE: phi={phi_snp:.4f}, sigma={sigma_snp:.4f}")
 
+    diagnose_fit(x=noise, fitted_dist=SNPDistribution(K=K)(c=c_hat))
+
     # QQ plots for residuals vs assumed Normal and fitted SNP noise
     eps_norm = (x[1:] - phi_norm * x[:-1]) / sigma_norm
     eps_snp = (x[1:] - phi_snp * x[:-1]) / sigma_snp
@@ -73,8 +82,7 @@ if __name__ == "__main__":
     emp_snp = np.sort(eps_snp)
 
     q_norm = stats.norm.ppf(probs)
-    q_snp = SNPDistribution(K=3)(c=c_hat).ppf(probs)
-
+    q_snp = SNPDistribution(K=K)(c=c_hat).ppf(probs)
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
     ax0 = axes[0]
@@ -98,6 +106,4 @@ if __name__ == "__main__":
     fig.tight_layout()
     plt.show()
 
-    pepe = 1
     
-

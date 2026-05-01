@@ -1,7 +1,9 @@
 import numpy as np
 from scipy import stats
 
+from snpdenspy.snp.snp_distribution import SNPDistribution
 from snpdenspy.util.diagnose.diagnose_fit import diagnose_fit
+
 
 def _sample_gaussian_mixture(mus, sigmas, weights, nsamples, rng=None):
     """
@@ -99,14 +101,16 @@ if __name__ == "__main__":
     ]
 
     for name, sampler, pdf_func in distributions:
+        
+        K = 5
+        x = sampler(nsamples=4000, rng = np.random.default_rng())
+        c_hat, loc_hat, scale_hat = SNPDistribution(K=K).fit_mle(x=x, fit_loc=True, fit_scale=True)
+        fitted_dist = SNPDistribution(K=K)(c=c_hat, loc=loc_hat, scale=scale_hat)
+
         print(f"\n=== {name} ===")
         diagnose_fit(
-            sample_func=sampler,
+            x=x,
+            fitted_dist=fitted_dist,
             pdf_original_func=pdf_func,
-            K=5,
-            method='mle', 
-            fit_loc_scale=True,
-            nsamples=4000,
-            rng=rng,
             title=name,
         )
