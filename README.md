@@ -1,5 +1,9 @@
 # SNP Density Estimation Package (snpdenspy)
 
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
+[![PyPI version fury.io](https://img.shields.io/pypi/v/OMIEData.svg)](https://pypi.org/project/OMIEData/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/OMIEData.svg)](https://www.python.org/)
+
 ## Introduction
 
 The `snpdenspy` package provides a Python implementation for the family of probability density functions known as semi-nonparametric (SNP). This family of densities arose from the seminal work
@@ -21,7 +25,7 @@ f(z) = \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z}
 $$
 
 where:
-- $` \phi(z) `$ is the standard normal density: $` \phi(z) = \frac{1}{\sqrt{2\pi}} e^{-z^2/2} `$
+- $` \phi(z) `$ is the standard normal density.
 - $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$)
 - $` c_k `$ are real-valued coefficients
 - $` Z `$ is the normalizing constant ensuring the density integrates to 1: 
@@ -57,20 +61,49 @@ Key features:
 
 ### Basic Usage of SNPSimpleDistribution
 
+This code ilustrates the use of the class SNPSimpleDistribution and its methods to analytically evaluate the density and calculate the mean and variance of the distribution. It also ilustrates the use of the rvs() methos to sample random numbers from the distribution.
+
 ```python
 import numpy as np
-from snpdenspy.snp import SNPSimpleDistribution
+import matplotlib.pyplot as plt
+from scipy.stats import norm
+
+import sys
+import os
+from snpdenspy.snp.snp_rv_continuous import SNPSimpleDistribution
 
 # Create distribution with 5 coefficients
 dist = SNPSimpleDistribution()
 
 # Evaluate PDF
-x = np.linspace(-3, 3, 100)
-pdf_vals = dist.pdf(x, c1=0.1, c2=0.0, c3=0.0, c4=0.0, c5=0.0, loc=0, scale=1)
+x = np.linspace(-6, 6, 500)
+pdf_vals = dist.pdf(x, c1=0.3, c2=0.1, c3=0.05, c4=0.0, c5=0.0, loc=0, scale=1)
 
 # Generate samples
-samples = dist.rvs(c1=0.1, c2=0.0, c3=0.0, c4=0.0, c5=0.0, size=1000)
+samples = dist.rvs(c1=0.3, c2=0.1, c3=0.05, c4=0.0, c5=0.0, size=1500, random_state=42)
+
+# Compute mean and variance of the SNP distribution
+mean_snp = dist.mean(c1=0.3, c2=0.1, c3=0.05, c4=0.0, c5=0.0, loc=0, scale=1)
+var_snp = dist.var(c1=0.3, c2=0.1, c3=0.05, c4=0.0, c5=0.0, loc=0, scale=1)
+
+# Evaluate normal distribution with same mean and variance
+normal_pdf = norm.pdf(x, loc=mean_snp, scale=np.sqrt(var_snp))
+
+# Plot the PDF, histogram of samples, and normal distribution
+plt.figure(figsize=(10, 6))
+plt.plot(x, pdf_vals, label='SNP PDF', linewidth=2)
+plt.hist(samples, bins=30, density=True, alpha=0.5, label='SNP Samples')
+plt.plot(x, normal_pdf, label='Normal PDF (same mean & variance)', linestyle='--', linewidth=2)
+plt.xlabel('x', fontsize=14)
+plt.ylabel('Density', fontsize=14)
+plt.title('SNP Distribution vs Normal Distribution', fontsize=16)
+plt.legend(fontsize=12)
+plt.grid(True)
+plt.show()
 ```
+The code generates the following plot:
+
+![alt text](https://github.com/acruzgarcia/snpdenspy/blob/dev/images/SNPSimpleExample1.png.png)
 
 ## SNPDistribution
 
