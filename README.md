@@ -43,7 +43,7 @@ SNP distributions offer several key benefits:
 - **Semiparametric Nature**: Combines parametric simplicity with nonparametric flexibility, allowing for rich density shapes without overfitting.
 - **Analytical Properties**: Closed-form expressions for PDF, CDF, and moments.
 - **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
-- **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the the Edgeworth-Sargan density, which have a clear statistical interpretations related to density deviations from normality.
+- **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the Edgeworth-Sargan family of densities, whose coefficients have a clear statistical interpretations related to density deviations from normality.
 - **Integration**: Seamless integration with SciPy's ecosystem (especially `SNPSimpleDistribution`)
 
 
@@ -51,7 +51,7 @@ SNP distributions offer several key benefits:
 
 ## SNPSimpleDistribution
 
-This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($ c_1 $ to $ c_5 $) and implements standard methods like `pdf`, `cdf`, `ppf`, and `rvs`. However, it does not include overriden fitting algorithms.
+This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($` c_1 `$ to $` c_5 `$) and implements standard methods like `pdf`, `cdf`, `ppf`, and `rvs`. However, it does not include overriden fitting algorithms.
 
 Key features:
 - Inherits from `rv_continuous` for compatibility
@@ -103,7 +103,7 @@ plt.show()
 ```
 The code generates the following plot:
 
-![alt text](https://github.com/acruzgarcia/snpdenspy/blob/dev/images/SNPSimpleExample1.png.png)
+![alt text](https://github.com/acruzgarcia/snpdenspy/blob/main/images/SNPSimpleExample1.png.png)
 
 ## SNPDistribution
 
