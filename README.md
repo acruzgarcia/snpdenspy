@@ -8,9 +8,9 @@ The `snpdenspy` package provides a Python implementation for the family of proba
 
 The SNP density is formulated as a modification of the standard normal density using Hermite polynomials. For a standardized variable $ z $, the density is given by:
 
-$
+$$
 f(z) = \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z}
-$
+$$
 
 where:
 - $ \phi(z) $ is the standard normal density: $ \phi(z) = \frac{1}{\sqrt{2\pi}} e^{-z^2/2} $
