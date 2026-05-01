@@ -44,14 +44,15 @@ SNP distributions offer several key benefits:
 - **Analytical Properties**: Closed-form expressions for PDF, CDF, and moments.
 - **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
 - **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the Edgeworth-Sargan family of densities, whose coefficients have a clear statistical interpretations related to density deviations from normality.
-- **Integration**: Seamless integration with SciPy's ecosystem (especially `SNPSimpleDistribution`)
+- **Integration**: Seamless integration with SciPy's ecosystem (specially `SNPSimpleDistribution`)
 
 
 # Implemented Classes
 
 ## SNPSimpleDistribution
 
-This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($` c_1 `$ to $` c_5 `$) and implements standard methods like `pdf`, `cdf`, `ppf`, and `rvs`. However, it does not include overriden fitting algorithms, so the `fit()` method rely on `rv_continuous` implementation (`_logpdf()` is implemented).
+This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($` c_1 `$ to $` c_5 `$) and implements standard methods like `pdf`, 
+`cdf`, `ppf`, `_logpdf`, `_munp` and `rvs`. However, it does not include overriden fitting algorithms, so its `fit` method rely on `rv_continuous` implementation. `ppf` implementation relies on the `cdf` implementation and a root-finding algorithm.
 
 Key features:
 - Inherits from `rv_continuous` for compatibility
@@ -118,7 +119,7 @@ Key features:
 
 The package implements an efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in the cited paper from Gallant & Tauchen 1990. The method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high numbers of coefficients.
 
-THe sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example and highlight its superior performance versus inverting the CDF via root-finding. It also shows how SNP densities can describe bi-modal oness as well.
+THe sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example and highlight its superior performance versus inverting the CDF via root-finding. It also shows a set of SNP coefficients describing a bi-modal distribution.
 
 ```python
 import numpy as np
@@ -175,7 +176,7 @@ plt.legend(fontsize=13)
 plt.show()
 ```
 
-The results of the execution of the code are: 
+The result of the execution of the code is: 
 ```python
 Time taken to generate 5000 samples via root-finding: 0.3521 minutes
 Time taken to generate 5000 samples via accept-reject: 0.0481 minutes
