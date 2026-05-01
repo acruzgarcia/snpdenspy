@@ -1,6 +1,7 @@
 # Ignore all dotfiles and dot-directories
 .*
 !.gitignore
+TODO.md
 
 # Python bytecode
 __pycache__/
