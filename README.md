@@ -32,9 +32,20 @@ $$
 
 This formulation allows for flexible density shapes and efficient evaluation while maintaining analytical tractability.
 
-## Implemented Classes
+## Advantages of SNP Distributions
 
-### SNPSimpleDistribution
+SNP distributions offer several key benefits:
+
+- **Semiparametric Nature**: Combines parametric simplicity with nonparametric flexibility, allowing for rich density shapes without overfitting.
+- **Analytical Properties**: Closed-form expressions for PDF, CDF, and moments.
+- **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
+- **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the the Edgeworth-Sargan density, which have a clear statistical interpretations related to density deviations from normality.
+- **Integration**: Seamless integration with SciPy's ecosystem (especially `SNPSimpleDistribution`)
+
+
+# Implemented Classes
+
+## SNPSimpleDistribution
 
 This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($ c_1 $ to $ c_5 $) and implements standard methods like `pdf`, `cdf`, `ppf`, and `rvs`. However, it does not include overriden fitting algorithms.
 
@@ -44,7 +55,24 @@ Key features:
 - Efficient sampling via accept-reject method
 - No fitting capabilities (use `SNPDistribution` for fitting)
 
-### SNPDistribution
+### Basic Usage of SNPSimpleDistribution
+
+```python
+import numpy as np
+from snpdenspy.snp import SNPSimpleDistribution
+
+# Create distribution with 5 coefficients
+dist = SNPSimpleDistribution()
+
+# Evaluate PDF
+x = np.linspace(-3, 3, 100)
+pdf_vals = dist.pdf(x, c1=0.1, c2=0.0, c3=0.0, c4=0.0, c5=0.0, loc=0, scale=1)
+
+# Generate samples
+samples = dist.rvs(c1=0.1, c2=0.0, c3=0.0, c4=0.0, c5=0.0, size=1000)
+```
+
+## SNPDistribution
 
 This is the general implementation, supporting an arbitrary number of Hermite coefficients. It does not inherit from `rv_continuous` but provides similar functionality through methods like `pdf`, `cdf`, `ppf`, and `rvs`. It includes both moment-matching and maximum likelihood estimation (MLE) fitting methods.
 
@@ -56,19 +84,7 @@ Key features:
 
 ## Sampling Method
 
-The package implements the efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in Gallant and Tauchen 1990, A nonparametric approach to nonlinear time series analysis: estimation and simulation. 
-
-This method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high numbers of coefficients.
-
-## Advantages of SNP Distributions
-
-SNP distributions offer several key benefits:
-
-- **Semiparametric Nature**: Combines parametric simplicity with nonparametric flexibility, allowing for rich density shapes without overfitting.
-- **Analytical Properties**: Closed-form expressions for PDF, CDF, and moments.
-- **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
-- **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the the Edgeworth-Sargan density, which have a clear statistical interpretations related to density deviations from normality.
-- **Integration**: Seamless integration with SciPy's ecosystem (especially `SNPSimpleDistribution`)
+The package implements an efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in the cited paper from Gallant and Tauchen 1990. The method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high numbers of coefficients.
 
 ## Fitting Methods
 
@@ -113,23 +129,6 @@ c_fit, loc_fit, scale_fit = dist.fit_mle(
 ```
 
 ## Usage Examples
-
-### Basic Usage with SNPSimpleDistribution
-
-```python
-import numpy as np
-from snpdenspy.snp import SNPSimpleDistribution
-
-# Create distribution with 5 coefficients
-dist = SNPSimpleDistribution()
-
-# Evaluate PDF
-x = np.linspace(-3, 3, 100)
-pdf_vals = dist.pdf(x, c1=0.1, c2=0.0, c3=0.0, c4=0.0, c5=0.0, loc=0, scale=1)
-
-# Generate samples
-samples = dist.rvs(c1=0.1, c2=0.0, c3=0.0, c4=0.0, c5=0.0, size=1000)
-```
 
 ### Advanced Usage with SNPDistribution
 
