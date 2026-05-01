@@ -2,11 +2,19 @@
 
 ## Introduction
 
-The `snpdenspy` package provides a Python implementation for the family of probability density functions known as semi-nonparametric (SNP). This family arose from the seminal work of Gallant and Nychka (Semi-Nonparametric Maximum Likelihood Estimation, 1987) and the implementation of this package is mainly based on Gallant and Tauchen (A nonparametric approach to nonlinear time series analysis: estimation and simulation, 1990). The package implements the theoretical framework described in their paper and does not introduce new methodological contributions. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions.
+The `snpdenspy` package provides a Python implementation for the family of probability density functions known as semi-nonparametric (SNP). This family of densities arose from the seminal work
+
+- *Gallant & Nychka 1987, Semi-Nonparametric Maximum Likelihood Estimation*.
+
+and the implementation of this package is mainly based on 
+
+- *Gallant & Tauchen 1990, A nonparametric approach to nonlinear time series analysis: estimation and simulation*. 
+
+The package implements the theoretical framework described in the paper and does not introduce new methodological contributions. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions.
 
 ## Mathematical Formulation
 
-The SNP density is formulated as a modification of the standard normal density using Hermite polynomials. For a standardized variable $ z $, the density is given by:
+The SNP density is formulated as an expansion of the standard normal density using probabilistic Hermite polynomials. For a standardized variable $`z`$, the density is given by:
 
 $$
 f(z) = \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z}
