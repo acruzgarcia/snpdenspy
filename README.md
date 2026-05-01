@@ -74,17 +74,18 @@ from snpdenspy.snp.snp_rv_continuous import SNPSimpleDistribution
 
 # Create distribution with 5 coefficients
 dist = SNPSimpleDistribution()
+c_params = [0.3, 0.1, 0.05, 0.0, 0.0]
 
 # Evaluate PDF
 x = np.linspace(-6, 6, 500)
-pdf_vals = dist.pdf(x, c1=0.3, c2=0.1, c3=0.05, c4=0.0, c5=0.0, loc=0, scale=1)
+pdf_vals = dist.pdf(x, *c_params, loc=0, scale=1)
 
 # Generate samples
-samples = dist.rvs(c1=0.3, c2=0.1, c3=0.05, c4=0.0, c5=0.0, size=1500, random_state=42)
+samples = dist.rvs(*c_params, size=1500, random_state=42)
 
 # Compute mean and variance of the SNP distribution
-mean_snp = dist.mean(c1=0.3, c2=0.1, c3=0.05, c4=0.0, c5=0.0, loc=0, scale=1)
-var_snp = dist.var(c1=0.3, c2=0.1, c3=0.05, c4=0.0, c5=0.0, loc=0, scale=1)
+mean_snp = dist.mean(*c_params, loc=0, scale=1)
+var_snp = dist.var(*c_params, loc=0, scale=1)
 
 # Evaluate normal distribution with same mean and variance
 normal_pdf = norm.pdf(x, loc=mean_snp, scale=np.sqrt(var_snp))
