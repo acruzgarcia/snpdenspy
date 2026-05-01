@@ -51,8 +51,8 @@ SNP distributions offer several key benefits:
 
 ## SNPSimpleDistribution
 
-This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($` c_1 `$ to $` c_5 `$) and implements standard methods like `pdf`, 
-`cdf`, `ppf`, `_logpdf`, `_munp` and `rvs`. However, it does not include overriden fitting algorithms, so its `fit` method rely on `rv_continuous` implementation. `ppf` implementation relies on the `cdf` implementation and a root-finding algorithm.
+This class inherits from `scipy.stats.rv_continuous`, providing seamless integration with SciPy's statistical distributions framework. It supports exactly 5 Hermite coefficients ($` c_1 `$ to $` c_5 `$) and implements standard methods like `_pdf`, 
+`_cdf`, `_ppf`, `_logpdf`, `_munp` and `_rvs`. However, it does not include overriden fitting algorithms, so its `fit` method rely on `rv_continuous` implementation. `_ppf` implementation relies on the `_cdf` implementation and a root-finding algorithm.
 
 Key features:
 - Inherits from `rv_continuous` for compatibility
@@ -107,7 +107,7 @@ The code generates the following plot:
 
 ## SNPDistribution
 
-This is the general implementation, supporting an arbitrary number of Hermite coefficients. It does not inherit from `rv_continuous` but provides similar functionality through methods like `pdf`, `cdf`, `ppf`, and `rvs`. It includes both moment-matching and maximum likelihood estimation (MLE) fitting methods.
+This is the general implementation, supporting an arbitrary number of Hermite coefficients. It does not inherit from `rv_continuous` but provides similar functionality through methods like `pdf`, `cdf`, `ppf`, `logpdf`, `munp` and `rvs`. It includes both moment-matching and maximum likelihood estimation (MLE) fitting methods.
 
 Key features:
 - Arbitrary number of coefficients ($` K `$).
@@ -117,9 +117,9 @@ Key features:
 
 ## Sampling Method
 
-The package implements an efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in the cited paper from Gallant & Tauchen 1990. The method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high numbers of coefficients.
+The package implements an efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in the cited paper from Gallant & Tauchen 1990. The method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high number of coefficients.
 
-THe sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example and highlight its superior performance versus inverting the CDF via root-finding. It also shows a set of SNP coefficients describing a bi-modal distribution.
+The sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example and highlight its superior performance versus inverting the CDF via root-finding. It also shows a set of SNP coefficients describing a bi-modal distribution.
 
 ```python
 import numpy as np
@@ -129,9 +129,6 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-
-import sys
-sys.path.insert(0, "C:\\Github\\snpdenspy\\snpdenspy")
 
 from snpdenspy.snp.snp_distribution import SNPDistribution
 from snpdenspy.util.diagnose.equal_distribution_plots import (
@@ -181,7 +178,8 @@ The result of the execution of the code is:
 Time taken to generate 5000 samples via root-finding: 0.3521 minutes
 Time taken to generate 5000 samples via accept-reject: 0.0481 minutes
 ```
-![alt text](https://github.com/acruzgarcia/snpdenspy/blob/main/images/SamplingExamples.png)
+
+![alt text](https://github.com/acruzgarcia/snpdenspy/blob/main/images/SamplingExample.png)
  
 ## Fitting Methods
 
