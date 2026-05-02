@@ -14,7 +14,9 @@ and the implementation of this package is mainly based on
 
 - *Gallant & Tauchen 1990, A nonparametric approach to nonlinear time series analysis: estimation and simulation*. 
 
-The package implements the theoretical framework described in the paper and does not introduce new methodological contributions. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions.
+The package implements the theoretical framework described in the paper and does not introduce new methodological contributions. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions. It addiotionally provides efficient routines to evaluate hermite polinomials and for monomial-hermite conversion and viceversa.
+
+The package is intended as an alternative to existing nonparametric density estimation methods.
 
 ## Summary of the Mathematical Formulation
 
@@ -31,7 +33,7 @@ where:
 - $` Z `$ is the normalizing constant ensuring the density integrates to 1: 
 
 $$ 
-Z = 1 + \sum_{k=1}^{K} c_k^2 (k+1)! 
+Z = 1 + \sum_{k=1}^{K} c_k^2 k! 
 $$
 
 This formulation allows for flexible density shapes and efficient evaluation while maintaining analytical tractability.
@@ -45,6 +47,51 @@ SNP distributions offer several key benefits:
 - **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
 - **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the Edgeworth-Sargan family of densities, whose coefficients have a clear statistical interpretations related to density deviations from normality.
 - **Integration**: Seamless integration with SciPy's ecosystem (specially `SNPSimpleDistribution`)
+
+## On the Probabilistic Hermite polynomials
+
+The probabilistic Hermite polynomials are defined from the $n$-th derivative of the standard normal density:
+
+$$
+H_n(z) = (-1)^n \frac{1}{\phi(z)} \frac{d^n}{dz^n} \phi(z) = (-1)^n e^{z^2/2} \frac{d^n}{dz^n} e^{-z^2/2}
+$$
+
+The first four probabilistic Hermite polynomials are:
+
+$$
+\begin{aligned}
+H_0(z) &= 1, \\
+H_1(z) &= z, \\
+H_2(z) &= z^2 - 1, \\
+H_3(z) &= z^3 - 3z.
+\end{aligned}
+$$
+
+The probabilistic Hermite polynomials satisfy the orthogonality property:
+
+$$
+\int_{-\infty}^{\infty} H_m(z) H_n(z) \phi(z) \, dz = \delta_{mn} n!
+$$
+
+where $` \delta_{mn} `$ is the Kronecker delta.
+
+To derive the formula for the integration constant $` Z `$, we integrate the density over the entire real line:
+
+$$
+Z = \int_{-\infty}^{\infty} f(z) \, dz = \int_{-\infty}^{\infty} \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z} \, dz = 1
+$$
+
+Expanding the square and using the orthogonality property:
+
+$$
+\int_{-\infty}^{\infty} \phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2 \, dz = \int_{-\infty}^{\infty} \phi(z) \, dz + 2 \sum_{k=1}^{K} c_k \int_{-\infty}^{\infty} \phi(z) H_k(z) \, dz + \sum_{k=1}^{K} \sum_{m=1}^{K} c_k c_m \int_{-\infty}^{\infty} \phi(z) H_k(z) H_m(z) \, dz
+$$
+
+The first term is 1, the second term is 0 (since $` H_k(z) `$ are orthogonal to the constant function), and the third term is $` \sum_{k=1}^{K} c_k^2 k! `$. Thus:
+
+$$
+Z = 1 + \sum_{k=1}^{K} c_k^2 k!
+$$
 
 
 # Implemented Classes
@@ -119,7 +166,7 @@ Key features:
 
 The package implements an efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in the cited paper from Gallant & Tauchen 1990. The method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high number of coefficients.
 
-The sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example and highlight its superior performance versus inverting the CDF via root-finding. It also shows a set of SNP coefficients describing a bi-modal distribution.
+The sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example of the method highlighting its superior performance versus inverting the CDF via root-finding. It also shows a set of SNP coefficients describing a bi-modal distribution.
 
 ```python
 import numpy as np
