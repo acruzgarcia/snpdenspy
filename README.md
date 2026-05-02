@@ -28,7 +28,7 @@ SNP distributions offer several key benefits:
 - **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the Edgeworth-Sargan family of densities, whose coefficients have a clear statistical interpretations related to density deviations from normality.
 - **Integration**: Seamless integration with SciPy's ecosystem (specially `SNPSimpleDistribution`)
 
-## Summary of the Mathematical Formulation
+## Mathematical Formulation
 
 The SNP density of a variable $`X`$ is formulated as an expansion of the standard normal density using probabilistic Hermite polynomials. For the standardized variable $`Z=\frac{X-\mu}{\sigma}`$, the Probability Density Function (PDF) is given by:
 
@@ -41,7 +41,7 @@ where:
 - $` \phi(z) `$ is the standard normal density
 - $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$)
 - $` c_k `$ are unconstrained real-valued coefficients
-- $` C `$ is the normalizing constant that ensures the density integrates to 1. Bacause of the Hermite polynomial properties its value is ((see section *On the Probabilistic Hermite polynomials* below for more details)) 
+- $` C `$ is the normalizing constant that ensures the density integrates to 1. Bacause of the Hermite polynomial properties its value is ((see section *Probabilistic Hermite polynomials* below for more details)) 
 
 $$ 
 C = 1 + \sum_{k=1}^{K} c_k^2 k! 
@@ -93,7 +93,7 @@ $$
 
 The formulation herein explained allows for flexible density shapes while maintaining analytical tractability and providing efficient evaluation of PDF, CDF and moments functions.
 
-## On the Probabilistic Hermite polynomials
+## Probabilistic Hermite polynomials
 
 The probabilistic Hermite polynomials are defined from the $n$-th derivative of the standard normal density:
 
@@ -120,7 +120,7 @@ $$
 
 where $` \delta_{mn} `$ is 1 if m = n and 0 otherwise.
 
-Thus, the integration constant $` C `$ in *Summary of the Mathematical Formulation* section above
+Thus, the integration constant $` C `$ in *Mathematical Formulation* section above
 
 $$
 C = \int_{-\infty}^{\infty} \phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2 dz
