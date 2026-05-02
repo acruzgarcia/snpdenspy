@@ -18,6 +18,16 @@ The package implements the theoretical framework described in the paper and does
 
 The package is intended as an alternative to existing nonparametric density estimation methods.
 
+## SNP Distributions' key benefits
+
+SNP distributions offer several key benefits:
+
+- **Flexibility as with nonparametric approaches**: Allow for general and rich density shapes, without overfitting when the number of coefficients is low.
+- **Analytical Properties**: Closed-form expressions for PDF, CDF, and moments.
+- **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
+- **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the Edgeworth-Sargan family of densities, whose coefficients have a clear statistical interpretations related to density deviations from normality.
+- **Integration**: Seamless integration with SciPy's ecosystem (specially `SNPSimpleDistribution`)
+
 ## Summary of the Mathematical Formulation
 
 The SNP density of a variable $`X`$ is formulated as an expansion of the standard normal density using probabilistic Hermite polynomials. For the standardized variable $`Z=\frac{X-\mu}{\sigma}`$, the Probability Density Function (PDF) is given by:
@@ -48,7 +58,7 @@ where $d_0, ..., d_{2K}$ are the Hermite coefficients of the expansion of $\left
 Likewise, the $k$-th raw moment of the distribution is 
 
 $$
-\mu_k = E[Z^k] = \sum_{n=0}^{2K} d_n E[Z^k H_n(Z)]
+E[Z^k] = \sum_{n=0}^{2K} d_n E[Z^k H_n(Z)]
 $$
 
 where $E[Z^k H_n(Z)]$ is the expectation under the standard normal distribution. This can be computed using the monomial expansion of the Hermite polynomial
@@ -82,16 +92,6 @@ E[X^r] = \sum_{j=0}^{r} \binom{r}{j} \mu^{r-j} \sigma^j E[Z^j].
 $$
 
 The formulation herein explained allows for flexible density shapes while maintaining analytical tractability and providing efficient evaluation of PDF, CDF and moments functions.
-
-## SNP Distributions' key benefits
-
-SNP distributions offer several key benefits:
-
-- **Flexibility as with nonparametric approaches**: Allow for general and rich density shapes, without overfitting when the number of coefficients is low.
-- **Analytical Properties**: Closed-form expressions for PDF, CDF, and moments.
-- **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
-- **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the Edgeworth-Sargan family of densities, whose coefficients have a clear statistical interpretations related to density deviations from normality.
-- **Integration**: Seamless integration with SciPy's ecosystem (specially `SNPSimpleDistribution`)
 
 ## On the Probabilistic Hermite polynomials
 
