@@ -20,30 +20,30 @@ The package is intended as an alternative to existing nonparametric density esti
 
 ## Summary of the Mathematical Formulation
 
-The SNP density of a variable $`x`$ is formulated as an expansion of the standard normal density using probabilistic Hermite polynomials. For the standardized variable $`z=\frac{x-\mu}{\sigma}`$, the Probability Density Function (PDF) is given by:
+The SNP density of a variable $`X`$ is formulated as an expansion of the standard normal density using probabilistic Hermite polynomials. For the standardized variable $`Z=\frac{X-\mu}{\sigma}`$, the Probability Density Function (PDF) is given by:
 
 $$
-f(z) = \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z}
+f_Z(z) = \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{C}
 $$
 
 where:
-- $` \mu`$ and $` \sigma`$ are the location and scale parameters.
-- $` \phi(z) `$ is the standard normal density.
-- $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$).
+- $` \mu`$ and $` \sigma`$ are the location and scale parameters
+- $` \phi(z) `$ is the standard normal density
+- $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$)
 - $` c_k `$ are unconstrained real-valued coefficients
-- $` Z `$ is the normalizing constant that ensures the density integrates to 1. Bacause of the Hermite polynomial properties (For more details, see section *On the Probabilistic Hermite polynomials* below), its value is 
+- $` C `$ is the normalizing constant that ensures the density integrates to 1. Bacause of the Hermite polynomial properties its value is ((see section *On the Probabilistic Hermite polynomials* below for more details)) 
 
 $$ 
-Z = 1 + \sum_{k=1}^{K} c_k^2 k! 
+C = 1 + \sum_{k=1}^{K} c_k^2 k! 
 $$
 
 The Cumulative Density Function (CDF) is
 
 $$
-F(z) = \Phi(z) - \frac{\phi(z)}{d_0} \sum_{n=1}^{2K} d_n H_{n-1}(z)
+F_Z(z) = \Phi(z) - \frac{\phi(z)}{d_0} \sum_{n=1}^{2K} d_n H_{n-1}(z)
 $$
 
-where $d_n$ are the Hermite coefficients of the expansion of $\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2$.
+where $d_0, ..., d_{2K}$ are the Hermite coefficients of the expansion of $\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2$.
 
 Likewise, the $k$-th raw moment of the distribution is 
 
@@ -65,7 +65,23 @@ $$
 
 where $E[Z^m] = 0$ if $m$ is odd, and $E[Z^m] = (m-1)!!$ if $m$ is even (double factorial). Note however that the moment-matching fitting approach implemented in this package uses a more efficient way of computing $E[Z^k H_n(Z)]$, as described in section *Moment Matching* below.
 
-This formulation allows for flexible density shapes and efficient evaluation while maintaining analytical tractability of PDF, CDF and moments functions.
+Now for the original variable $X$, the SNP functions are obtained from the standardized functions by the usual location-scale transform. That is,
+
+$$
+f_X(x) = \frac{1}{\sigma} f_Z\left(z\right)
+$$
+
+$$
+F_X(x) = F_Z\left(z\right)
+$$
+
+and the raw moments of $x$ follow from the standardized moments of $z$ via
+
+$$
+E[X^r] = \sum_{j=0}^{r} \binom{r}{j} \mu^{r-j} \sigma^j E[Z^j].
+$$
+
+The formulation herein explained allows for flexible density shapes while maintaining analytical tractability and providing efficient evaluation of PDF, CDF and moments functions.
 
 ## SNP Distributions' key benefits
 
@@ -85,7 +101,7 @@ $$
 H_n(z) = (-1)^n \frac{1}{\phi(z)} \frac{d^n}{dz^n} \phi(z) = (-1)^n e^{z^2/2} \frac{d^n}{dz^n} e^{-z^2/2}
 $$
 
-The first four probabilistic Hermite polynomials are:
+For example, the first four probabilistic Hermite polynomials are:
 
 $$
 \begin{aligned}
@@ -102,24 +118,24 @@ $$
 \int_{-\infty}^{\infty} H_m(z) H_n(z) \phi(z) \, dz = \delta_{mn} n!
 $$
 
-where $` \delta_{mn} `$ is the Kronecker delta.
+where $` \delta_{mn} `$ is 1 if m = n and 0 otherwise.
 
-To derive the formula for the integration constant $` Z `$, we integrate the density over the entire real line:
-
-$$
-Z = \int_{-\infty}^{\infty} f(z) \, dz = \int_{-\infty}^{\infty} \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z} \, dz = 1
-$$
-
-Expanding the square and using the orthogonality property:
+Thus, the integration constant $` C `$ in *Summary of the Mathematical Formulation* section above
 
 $$
-\int_{-\infty}^{\infty} \phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2 \, dz = \int_{-\infty}^{\infty} \phi(z) \, dz + 2 \sum_{k=1}^{K} c_k \int_{-\infty}^{\infty} \phi(z) H_k(z) \, dz + \sum_{k=1}^{K} \sum_{m=1}^{K} c_k c_m \int_{-\infty}^{\infty} \phi(z) H_k(z) H_m(z) \, dz
+C = \int_{-\infty}^{\infty} \phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2 dz
+$$
+
+is calculated by expanding the square and using the orthogonality property:
+
+$$
+C = \int_{-\infty}^{\infty} \phi(z) dz + 2 \sum_{k=1}^{K} c_k \int_{-\infty}^{\infty} \phi(z) H_k(z) dz + \sum_{k=1}^{K} \sum_{m=1}^{K} c_k c_m \int_{-\infty}^{\infty} \phi(z) H_k(z) H_m(z) dz
 $$
 
 The first term is 1, the second term is 0 (since $` H_k(z) `$ are orthogonal to the constant function), and the third term is $` \sum_{k=1}^{K} c_k^2 k! `$. Thus:
 
 $$
-Z = 1 + \sum_{k=1}^{K} c_k^2 k!
+C = 1 + \sum_{k=1}^{K} c_k^2 k!
 $$
 
 ## SNPSimpleDistribution
