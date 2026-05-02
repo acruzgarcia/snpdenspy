@@ -14,31 +14,60 @@ and the implementation of this package is mainly based on
 
 - *Gallant & Tauchen 1990, A nonparametric approach to nonlinear time series analysis: estimation and simulation*. 
 
-The package implements the theoretical framework described in the paper and does not introduce new methodological contributions. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions. It addiotionally provides efficient routines to evaluate hermite polinomials and for monomial-hermite conversion and viceversa.
+The package implements the theoretical framework described in the paper and does not introduce new methodological contributions. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions. It additionally provides efficient evaluation and manipulation of Hermite polynomials, as well as bidirectional transformations between Hermite and monomial bases.
 
 The package is intended as an alternative to existing nonparametric density estimation methods.
 
 ## Summary of the Mathematical Formulation
 
-The SNP density is formulated as an expansion of the standard normal density using probabilistic Hermite polynomials. For a standardized variable $`z`$, the density is given by:
+The SNP density of a variable $`x`$ is formulated as an expansion of the standard normal density using probabilistic Hermite polynomials. For the standardized variable $`z=\frac{x-\mu}{\sigma}`$, the Probability Density Function (PDF) is given by:
 
 $$
 f(z) = \frac{\phi(z) \left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2}{Z}
 $$
 
 where:
+- $` \mu`$ and $` \sigma`$ are the location and scale parameters.
 - $` \phi(z) `$ is the standard normal density.
-- $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$)
-- $` c_k `$ are real-valued coefficients
-- $` Z `$ is the normalizing constant ensuring the density integrates to 1: 
+- $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$).
+- $` c_k `$ are unconstrained real-valued coefficients
+- $` Z `$ is the normalizing constant that ensures the density integrates to 1. Bacause of the Hermite polynomial properties (For more details, see section *On the Probabilistic Hermite polynomials* below), its value is 
 
 $$ 
 Z = 1 + \sum_{k=1}^{K} c_k^2 k! 
 $$
 
-This formulation allows for flexible density shapes and efficient evaluation while maintaining analytical tractability.
+The Cumulative Density Function (CDF) is
 
-## Advantages of SNP Distributions
+$$
+F(z) = \Phi(z) - \frac{\phi(z)}{d_0} \sum_{n=1}^{2K} d_n H_{n-1}(z)
+$$
+
+where $d_n$ are the Hermite coefficients of the expansion of $\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2$.
+
+Likewise, the $k$-th raw moment of the distribution is 
+
+$$
+\mu_k = E[Z^k] = \sum_{n=0}^{2K} d_n E[Z^k H_n(Z)]
+$$
+
+where $E[Z^k H_n(Z)]$ is the expectation under the standard normal distribution. This can be computed using the monomial expansion of the Hermite polynomial
+
+$$
+H_n(z) = \sum_{j=0}^{\lfloor n/2 \rfloor} \frac{(-1)^j n!}{j! (n-2j)! 2^j} z^{n-2j}
+$$
+
+Thus,
+
+$$
+E[Z^k H_n(Z)] = \sum_{j=0}^{\lfloor n/2 \rfloor} \frac{(-1)^j n!}{j! (n-2j)! 2^j} E[Z^{k + n - 2j}]
+$$
+
+where $E[Z^m] = 0$ if $m$ is odd, and $E[Z^m] = (m-1)!!$ if $m$ is even (double factorial). Note however that the moment-matching fitting approach implemented in this package uses a more efficient way of computing $E[Z^k H_n(Z)]$, as described in section *Moment Matching* below.
+
+This formulation allows for flexible density shapes and efficient evaluation while maintaining analytical tractability of PDF, CDF and moments functions.
+
+## SNP Distributions' key benefits
 
 SNP distributions offer several key benefits:
 
@@ -92,9 +121,6 @@ The first term is 1, the second term is 0 (since $` H_k(z) `$ are orthogonal to 
 $$
 Z = 1 + \sum_{k=1}^{K} c_k^2 k!
 $$
-
-
-# Implemented Classes
 
 ## SNPSimpleDistribution
 
@@ -234,6 +260,17 @@ Time taken to generate 5000 samples via accept-reject: 0.0481 minutes
 
 This method (not directly taken from the described sources) estimates parameters by matching empirical moments to the theoretical moments of the SNP distribution.
 
+Alternatively, these expectations can be computed efficiently using the recurrence relation:
+
+$$
+I(r,n) = I(r-1, n+1) + r \cdot I(r-1, n-1), \quad r \geq 1
+$$
+
+with base cases $I(0,0) = 1$ and $I(0,n) = 0$ for $n > 0$, where $I(r,n) = E[Z^r H_n(Z)]$.
+
+This recurrence allows for the efficient computation of a table of expectations for multiple $r$ and $n$. 
+
+
 Usage:
 ```python
 dist = SNPDistribution(K=5)
@@ -314,3 +351,5 @@ external_params = result['external_params']
 ```
 
 Enjoy!
+
+
