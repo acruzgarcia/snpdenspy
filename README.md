@@ -22,8 +22,8 @@ The package is intended as an alternative to existing nonparametric density esti
 
 SNP distributions offer several key benefits:
 
-- **Flexibility as with nonparametric approaches**: Allow for general and rich density shapes, without overfitting when the number of coefficients is low.
-- **Analytical Properties**: Closed-form expressions for PDF, CDF, and moments.
+- **Nonparametric flexible approach**: Allow for general and rich density shapes, without overfitting when the polynomial degree is low.
+- **Analytical tractability**: Closed-form expressions for PDF, CDF, and moments.
 - **Computational Efficiency**: Fast evaluation and sampling compared to fully nonparametric methods.
 - **Interpretability**: The set of coefficients can be easily transformed to the to ones defining the Edgeworth-Sargan family of densities, whose coefficients have a clear statistical interpretations related to density deviations from normality.
 - **Integration**: Seamless integration with SciPy's ecosystem (specially `SNPSimpleDistribution`)
@@ -41,7 +41,7 @@ where:
 - $` \phi(z) `$ is the standard normal density
 - $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$)
 - $` c_k `$ are unconstrained real-valued coefficients
-- $` C `$ is the normalizing constant that ensures the density integrates to 1. Bacause of the Hermite polynomial properties its value is ((see section *Probabilistic Hermite polynomials* below for more details)) 
+- $` C `$ is the normalizing constant that ensures the density integrates to 1. Its value is ((see section *Probabilistic Hermite polynomials* below for more details)) 
 
 $$ 
 C = 1 + \sum_{k=1}^{K} c_k^2 k! 
@@ -53,15 +53,15 @@ $$
 F_Z(z) = \Phi(z) - \frac{\phi(z)}{d_0} \sum_{n=1}^{2K} d_n H_{n-1}(z)
 $$
 
-where $d_0, ..., d_{2K}$ are the Hermite coefficients of the expansion of $\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2$.
+where $`\Phi(z)`$ is the cumulative distribution of the standardard normal and $d_0, ..., d_{2K}$ are the Hermite coefficients of the expansion of $\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2$.
 
 Likewise, the $k$-th raw moment of the distribution is 
 
 $$
-E[Z^k] = \sum_{n=0}^{2K} d_n E[Z^k H_n(Z)]
+E[Z^k] = \sum_{n=0}^{2K} d_n E_\phi[Z^k H_n(Z)]
 $$
 
-where $E[Z^k H_n(Z)]$ is the expectation under the standard normal distribution. This can be computed using the monomial expansion of the Hermite polynomial
+where $E_\phi[Z^k H_n(Z)]$ is the expectation under the standard normal distribution. This can be computed using the monomial expansion of the Hermite polynomial
 
 $$
 H_n(z) = \sum_{j=0}^{\lfloor n/2 \rfloor} \frac{(-1)^j n!}{j! (n-2j)! 2^j} z^{n-2j}
@@ -70,10 +70,10 @@ $$
 Thus,
 
 $$
-E[Z^k H_n(Z)] = \sum_{j=0}^{\lfloor n/2 \rfloor} \frac{(-1)^j n!}{j! (n-2j)! 2^j} E[Z^{k + n - 2j}]
+E_\phi[Z^k H_n(Z)] = \sum_{j=0}^{\lfloor n/2 \rfloor} \frac{(-1)^j n!}{j! (n-2j)! 2^j} E_\phi[Z^{k + n - 2j}]
 $$
 
-where $E[Z^m] = 0$ if $m$ is odd, and $E[Z^m] = (m-1)!!$ if $m$ is even (double factorial). Note however that the moment-matching fitting approach implemented in this package uses a more efficient way of computing $E[Z^k H_n(Z)]$, as described in section *Moment Matching* below.
+where $E_\phi[Z^m] = 0$ if $m$ is odd, and $E_\phi[Z^m] = (m-1)!!$ if $m$ is even (double factorial). Note however that the moment-matching fitting approach implemented in `snpdenspy` uses a more efficient way of computing $E_\phi[Z^k H_n(Z)]$, as described in section *Moment Matching* below.
 
 Now for the original variable $X$, the SNP functions are obtained from the standardized functions by the usual location-scale transform. That is,
 
@@ -85,10 +85,10 @@ $$
 F_X(x) = F_Z\left(z\right)
 $$
 
-and the raw moments of $x$ follow from the standardized moments of $z$ via
+and the raw moments of $X$ follow from the standardized moments of $Z$ via
 
 $$
-E[X^r] = \sum_{j=0}^{r} \binom{r}{j} \mu^{r-j} \sigma^j E[Z^j].
+E[X^r] = \sum_{j=0}^{r} \binom{r}{j} \mu^{r-j} \sigma^j E_\phi[Z^j].
 $$
 
 The formulation herein explained allows for flexible density shapes while maintaining analytical tractability and providing efficient evaluation of PDF, CDF and moments functions.
@@ -208,7 +208,7 @@ Key features:
 
 The package implements an efficient accept-reject sampling algorithm for generating random variates from SNP distributions described in the cited paper from Gallant & Tauchen 1990. The method uses a mixture of chi-squared distributions as the envelope, which is computationally superior to sampling via inverse CDF (root-finding on the CDF function) and particularly efficient for SNP distributions with moderate to high number of coefficients.
 
-The sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example of the method highlighting its superior performance versus inverting the CDF via root-finding. It also shows a set of SNP coefficients describing a bi-modal distribution.
+The sampling method is implemented for both `SNPSimpleDistribution` and `SNPDistribution`. The following code shows a usage example of the method highlighting its superior performance versus inverting the CDF via root-finding.
 
 ```python
 import numpy as np
@@ -272,17 +272,17 @@ Time taken to generate 5000 samples via accept-reject: 0.0481 minutes
  
 ## Fitting Methods
 
-### Moment Matching
+### Moment-Matching
 
-This method (not directly taken from the described sources) estimates parameters by matching empirical moments to the theoretical moments of the SNP distribution.
+This method (not directly taken from the cited papers) estimates parameters by matching empirical moments to the theoretical moments of the SNP distribution.
 
-Alternatively, these expectations can be computed efficiently using the recurrence relation:
+The theoretical moments of the SNP Distribution are described in section *Mathematical Formulation* above. However the implementation of the package uses a more efficient way of calculating the expectations by using the following recurrence relation:
 
 $$
-I(r,n) = I(r-1, n+1) + r \cdot I(r-1, n-1), \quad r \geq 1
+E_\phi[Z^r H_n(Z)] = E_\phi[Z^{r-1} H_{n+1}(Z)] + r E_\phi[Z^{r-1} H_{n-1}(Z)], \quad r \geq 1
 $$
 
-with base cases $I(0,0) = 1$ and $I(0,n) = 0$ for $n > 0$, where $I(r,n) = E[Z^r H_n(Z)]$.
+with base cases $E_\phi[Z^0 H_0(Z)] = 1$ and $E_\phi[Z^0 H_n(Z)] = 0$ for $n > 0$.
 
 This recurrence allows for the efficient computation of a table of expectations for multiple $r$ and $n$. 
 
