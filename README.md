@@ -261,7 +261,6 @@ plt.ylabel("Density", fontsize=14)
 plt.legend(fontsize=13)
 plt.show()
 ```
-
 The result of the execution of the code is: 
 ```python
 Time taken to generate 5000 samples via root-finding: 0.3521 minutes
@@ -286,11 +285,60 @@ with base cases $E_\phi[Z^0 H_0(Z)] = 1$ and $E_\phi[Z^0 H_n(Z)] = 0$ for $n > 0
 
 This recurrence allows for the efficient computation of a table of expectations for multiple $r$ and $n$. 
 
+The following code ilustrates the use of the method `fit_moment_matching` over a sample distribution generate from a Normal Inverse Gaussian. The option `fit_loc_scale` controls whether the mean and variance are optimized or the data is normalized.
 
-Usage:
 ```python
-dist = SNPDistribution(K=5)
-c_fit, loc_fit, scale_fit = dist.fit_moment_matching(data)
+import numpy as np
+from scipy import stats
+
+from snpdenspy.snp.snp_distribution import SNPDistribution
+from snpdenspy.util.diagnose.diagnose_fit import diagnose_fit
+
+nig_dist = stats.norminvgauss(a=3.0, b=1.0, loc=0.0, scale=1.0)
+x = nig_dist.rvs(size=4000, random_state=np.random.default_rng(98))
+        
+snp = SNPDistribution(K=6)
+c_hat, loc_hat, scale_hat = snp.fit_moment_matching(x=x, fit_loc_scale=True)        
+fitted_dist = snp.freeze(c=c_hat, loc=loc_hat, scale=scale_hat)
+print(f"\n=== NIG(a=3, b=1) ===")
+diagnose_fit(
+    x=x,
+    fitted_dist=fitted_dist,
+    pdf_original_func=nig_dist.pdf,
+    title="NIG(a=3, b=1)",
+    compare_normal=False,
+    compare_kde=True)
+```
+
+It also ilustrates the use of the function `diagnose_fit`, which provides some goodness-of-fit statistics as the (KS) or Cramér-von Mises (CVM) and analisis of the input empirical distribution versus the fitted one. The output of the previous code is as below.
+
+```python
+=== NIG(a=3, b=1) ===
+
+--- Fit summary ---
+Fitted parameters:
+c=[-0.121 -0.079 0.059] loc=0.5184 scale=0.7113
+Log-likelihood:    -3674.1102
+Two-sample statistics vs fitted draws (empirical vs fitted):
+  KS=  0.0172  CVM=  0.0001
+Moment order  Empirical raw moment  Fitted raw moment
+----------------------------------------------------------
+ 1              0.3425        0.3425
+ 2              0.4967        0.4967
+ 3              0.5354        0.5354
+ 4              1.0411        1.0411
+ 5              1.8397        1.8397
+    q    Empirical       Fitted
+------------------------------------
+  1%      -1.0553      -0.9076
+  5%      -0.5656      -0.5805
+ 10%      -0.3787      -0.3967
+ 25%      -0.0494      -0.0735
+ 50%       0.2930       0.3069
+ 75%       0.6956       0.7115
+ 90%       1.1299       1.1117
+ 95%       1.4122       1.3860
+ 99%       2.0292       2.0693
 ```
 
 ### Maximum Likelihood Estimation (MLE)

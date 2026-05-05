@@ -1,6 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import stats
     
 from snpdenspy.snp.snp_distribution import (
     FrozenSNPDistribution
@@ -62,7 +63,7 @@ def _print_quantile_table(x, fitted_dist: FrozenSNPDistribution):
     print("\n".join(lines))
     
 
-def _plot_density_and_qq(x, xs, pdf_fitted, fitted_dist, title, pdf_original = None):
+def _plot_density_and_qq(x, xs, pdf_fitted, fitted_dist, title, pdf_original = None, pdf_normal = None, pdf_kde = None):
     
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
@@ -72,10 +73,14 @@ def _plot_density_and_qq(x, xs, pdf_fitted, fitted_dist, title, pdf_original = N
     ax0.plot(xs, pdf_fitted, label="Fitted", color="blue", lw=2)
     if pdf_original is not None:
         ax0.plot(xs, pdf_original, label="Original", color="red", lw=2)
-    ax0.set_title(title or "Empirical and Fitted")
-    ax0.set_xlabel("x")
-    ax0.set_ylabel("Density")
-    ax0.legend()
+    if pdf_normal is not None:
+        ax0.plot(xs, pdf_normal, label="Normal match", color="green", lw=2, linestyle="--")
+    if pdf_kde is not None:
+        ax0.plot(xs, pdf_kde, label="KDE", color="purple", lw=2, linestyle="-.")
+    ax0.set_title(title or "Empirical and Fitted", fontsize=14)
+    ax0.set_xlabel("x", fontsize=12)
+    ax0.set_ylabel("Density", fontsize=12)
+    ax0.legend(fontsize=11)
 
     # qq plot: theoretical on x-axis, empirical on y-axis using full sample
     n = len(x)
@@ -89,10 +94,10 @@ def _plot_density_and_qq(x, xs, pdf_fitted, fitted_dist, title, pdf_original = N
     q_min = min(theor_q.min(), emp_sorted.min())
     q_max = max(theor_q.max(), emp_sorted.max())
     ax1.plot([q_min, q_max], [q_min, q_max], "--", color="gray", linewidth=1)
-    ax1.set_title("QQ plot (sample distribution vs fitted one)")
-    ax1.set_xlabel("Sample quantiles")
-    ax1.set_ylabel("Fitted quantiles")
-    ax1.legend()
+    ax1.set_title("QQ plot (sample distribution vs fitted one)", fontsize=14)
+    ax1.set_xlabel("Sample quantiles", fontsize=12)
+    ax1.set_ylabel("Fitted quantiles", fontsize=12)
+    ax1.legend(fontsize=11)
 
     fig.tight_layout()
     plt.show()
@@ -102,6 +107,8 @@ def diagnose_fit(
         fitted_dist: FrozenSNPDistribution,
         pdf_original_func: callable = None,
         title: str | None = None,
+        compare_normal: bool = False,
+        compare_kde: bool = False,
     ):
     
     # textual diagnostics
@@ -115,6 +122,18 @@ def diagnose_fit(
     margin =  0.05 * (np.max(x) - np.min(x))
     xs = np.linspace(np.min(x) - margin , np.max(x) + margin, 500)
     pdf_fitted = fitted_dist.pdf(xs)
+    pdf_normal = None
+    if compare_normal:
+        mean = np.mean(x)
+        var = np.var(x, ddof=1)
+        var = float(max(var, 0.0))
+        normal_dist = stats.norm(loc=mean, scale=np.sqrt(var))
+        pdf_normal = normal_dist.pdf(xs)
+    
+    pdf_kde = None
+    if compare_kde:
+        kde = stats.gaussian_kde(x)  # Uses Silverman's rule by default
+        pdf_kde = kde.evaluate(xs)
     
     _plot_density_and_qq(
         x=x,
@@ -123,4 +142,6 @@ def diagnose_fit(
         fitted_dist=fitted_dist,
         title=title,
         pdf_original=None if pdf_original_func is None else pdf_original_func(xs),
+        pdf_normal=pdf_normal,
+        pdf_kde=pdf_kde,
     )

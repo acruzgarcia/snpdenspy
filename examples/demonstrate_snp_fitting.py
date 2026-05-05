@@ -51,8 +51,12 @@ if __name__ == "__main__":
     laplace_dist = stats.laplace(loc=0.0, scale=1.5)
     logistic_dist = stats.logistic(loc=0.0, scale=1.0)
     skewnorm_dist = stats.skewnorm(a=8.0, loc=0.0, scale=1.0)
+    skewt_dist = stats.nct(df=5.0, nc=3.0, loc=0.0, scale=1.0)
+    genhyperbolic_dist = stats.genhyperbolic(p=1.0, a=1.5, b=0.5, loc=0.0, scale=1.0)
+    nig_dist = stats.norminvgauss(a=3.0, b=1.0, loc=0.0, scale=1.0)
     chi_dist = stats.chi(df=3.0)
     chi2_dist = stats.chi2(df=4.0)
+    beta_dist = stats.beta(a=2.0, b=5.0)
 
     def sample_student_t(nsamples, rng):
         return student_t_dist.rvs(size=nsamples, random_state=rng)
@@ -75,6 +79,27 @@ if __name__ == "__main__":
     def sample_skewnorm(nsamples, rng):
         return skewnorm_dist.rvs(size=nsamples, random_state=rng)
 
+    def pdf_skewnorm_eval(xs):
+        return skewnorm_dist.pdf(xs)
+
+    def sample_skewt(nsamples, rng):
+        return skewt_dist.rvs(size=nsamples, random_state=rng)
+
+    def pdf_skewt_eval(xs):
+        return skewt_dist.pdf(xs)
+
+    def sample_genhyperbolic(nsamples, rng):
+        return genhyperbolic_dist.rvs(size=nsamples, random_state=rng)
+
+    def pdf_genhyperbolic_eval(xs):
+        return genhyperbolic_dist.pdf(xs)
+
+    def sample_nig(nsamples, rng):
+        return nig_dist.rvs(size=nsamples, random_state=rng)
+
+    def pdf_nig_eval(xs):
+        return nig_dist.pdf(xs)
+
     def sample_chi(nsamples, rng):
         return chi_dist.rvs(size=nsamples, random_state=rng)
 
@@ -86,26 +111,39 @@ if __name__ == "__main__":
 
     def pdf_chi2_eval(xs):
         return chi2_dist.pdf(xs)
+    
+    def sample_beta(nsamples, rng):
+        return beta_dist.rvs(size=nsamples, random_state=rng)
 
-    def pdf_skewnorm_eval(xs):
-        return skewnorm_dist.pdf(xs)
+    def pdf_beta_eval(xs):
+        return beta_dist.pdf(xs)
 
-    distributions = [
-        ("Gaussian mixture", sample_gaussian_mixture, pdf_mixture_eval),
-        ("Student's t (df=5)", sample_student_t, pdf_student_t_eval),
-        ("Laplace(loc=0, scale=1.5)", sample_laplace, pdf_laplace_eval),
-        ("Logistic(loc=0, scale=1)", sample_logistic, pdf_logistic_eval),
-        ("Skew-normal(a=8)", sample_skewnorm, pdf_skewnorm_eval),
-        ("Chi(df=3)", sample_chi, pdf_chi_eval),
-        ("Chi-squared(df=4)", sample_chi2, pdf_chi2_eval),
+    method, pol_degree = 'mle', 8
+    distributions_and_fit = [
+        #("Gaussian mixture", sample_gaussian_mixture, pdf_mixture_eval, method, pol_degree ),
+        #("Student's t (df=5)", sample_student_t, pdf_student_t_eval, method, pol_degree ),
+        #("Laplace(loc=0, scale=1.5)", sample_laplace, pdf_laplace_eval, method, pol_degree ),
+        #("Logistic(loc=0, scale=1)", sample_logistic, pdf_logistic_eval, method, pol_degree ),
+        #("Skew-normal(a=8)", sample_skewnorm, pdf_skewnorm_eval, method, pol_degree ),
+        #("NIG(a=3, b=1)", sample_nig, pdf_nig_eval, method, pol_degree ),
+        #("Generalized Hyperbolic(p=1, a=1.5, b=0.5)", sample_genhyperbolic, pdf_genhyperbolic_eval, method, pol_degree ),
+        ("Skewed t (df=5, nc=3)", sample_skewt, pdf_skewt_eval, method, pol_degree ),
+        #("Chi(df=3)", sample_chi, pdf_chi_eval, method, pol_degree ),
+        #("Chi-squared(df=4)", sample_chi2, pdf_chi2_eval, method, pol_degree ),
+        #("Beta(a=2, b=5)", sample_beta, pdf_beta_eval, method, pol_degree  ),
     ]
 
-    for name, sampler, pdf_func in distributions:
+    for name, sampler, pdf_func, fit_method, K in distributions_and_fit:
         
-        K = 5
         x = sampler(nsamples=4000, rng = np.random.default_rng())
-        c_hat, loc_hat, scale_hat = SNPDistribution(K=K).fit_mle(x=x, fit_loc=True, fit_scale=True)
-        fitted_dist = SNPDistribution(K=K)(c=c_hat, loc=loc_hat, scale=scale_hat)
+        
+        snp = SNPDistribution(K=K)
+        if (fit_method == 'mle'):
+            c_hat, loc_hat, scale_hat = snp.fit_mle(x=x, fit_loc=True, fit_scale=True)
+        else:
+            c_hat, loc_hat, scale_hat = snp.fit_moment_matching(x=x, fit_loc_scale=True)
+        
+        fitted_dist = snp.freeze(c=c_hat, loc=loc_hat, scale=scale_hat)
 
         print(f"\n=== {name} ===")
         diagnose_fit(
@@ -113,4 +151,6 @@ if __name__ == "__main__":
             fitted_dist=fitted_dist,
             pdf_original_func=pdf_func,
             title=name,
+            compare_normal=False,
+            compare_kde=True,
         )
