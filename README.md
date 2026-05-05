@@ -41,13 +41,13 @@ where:
 - $` \phi(z) `$ is the standard normal density
 - $` H_k(z) `$ are the probabilistic Hermite polynomials (orthogonal with respect to $` \phi(z) `$)
 - $` c_k `$ are unconstrained real-valued coefficients
-- $` C `$ is the normalizing constant that ensures the density integrates to 1. Its value is ((see section *Probabilistic Hermite polynomials* below for more details)) 
+- $` C `$ is the normalizing constant that ensures the density integrates to 1. Its value is (see section *Probabilistic Hermite polynomials* below for more details) 
 
 $$ 
 C = 1 + \sum_{k=1}^{K} c_k^2 k! 
 $$
 
-The Cumulative Density Function (CDF) is
+The Cumulative Density Function (CDF) is then
 
 $$
 F_Z(z) = \Phi(z) - \frac{\phi(z)}{d_0} \sum_{n=1}^{2K} d_n H_{n-1}(z)
@@ -73,7 +73,7 @@ $$
 E_\phi[Z^k H_n(Z)] = \sum_{j=0}^{\lfloor n/2 \rfloor} \frac{(-1)^j n!}{j! (n-2j)! 2^j} E_\phi[Z^{k + n - 2j}]
 $$
 
-where $E_\phi[Z^m] = 0$ if $m$ is odd, and $E_\phi[Z^m] = (m-1)!!$ if $m$ is even (double factorial). Note however that the moment-matching fitting approach implemented in `snpdenspy` uses a more efficient way of computing $E_\phi[Z^k H_n(Z)]$, as described in section *Moment Matching* below.
+where $E_\phi[Z^m] = 0$ if $m$ is odd, and $E_\phi[Z^m] = (m-1)!!$ if $m$ is even (double factorial). Note however that the moment-matching fitting approach implemented in `SNPDistribution.fit_moment_matching()` uses a more efficient way of computing $E_\phi[Z^k H_n(Z)]$, as described in section *Moment Matching* below.
 
 Now for the original variable $X$, the SNP functions are obtained from the standardized functions by the usual location-scale transform. That is,
 
@@ -151,7 +151,7 @@ Key features:
 
 ### Basic Usage of SNPSimpleDistribution
 
-This code ilustrates the use of the class SNPSimpleDistribution and its methods to analytically evaluate the density and calculate the mean and variance of the distribution. It also ilustrates the use of the rvs() methos to sample random numbers from the distribution.
+This code ilustrates the use of the class SNPSimpleDistribution and its methods to analytically evaluate the density and calculate the mean and variance of the distribution. It also ilustrates the use of the rvs() method to sample random numbers from the SNP distribution.
 
 ```python
 import numpy as np
@@ -285,7 +285,7 @@ with base cases $E_\phi[Z^0 H_0(Z)] = 1$ and $E_\phi[Z^0 H_n(Z)] = 0$ for $n > 0
 
 This recurrence allows for the efficient computation of a table of expectations for multiple $r$ and $n$. 
 
-The following code ilustrates the use of the method `fit_moment_matching` over a sample distribution generate from a Normal Inverse Gaussian. The option `fit_loc_scale` controls whether the mean and variance are optimized or the data is normalized.
+The following code ilustrates the use of the method `fit_moment_matching` over a sample of points generated from a Normal Inverse Gaussian. The option `fit_loc_scale` controls whether the mean and variance are optimized or the data is normalized.
 
 ```python
 import numpy as np
@@ -317,28 +317,28 @@ It also ilustrates the use of the function `diagnose_fit`, which provides some g
 
 --- Fit summary ---
 Fitted parameters:
-c=[-0.121 -0.079 0.059] loc=0.5184 scale=0.7113
-Log-likelihood:    -3674.1102
+c=[-0.355 0.148 0.009 0.000 -0.000 0.001] loc=0.7894 scale=0.5534
+Log-likelihood:    -3680.3177
 Two-sample statistics vs fitted draws (empirical vs fitted):
-  KS=  0.0172  CVM=  0.0001
+  KS=  0.0076  CVM=  0.0000
 Moment order  Empirical raw moment  Fitted raw moment
 ----------------------------------------------------------
- 1              0.3425        0.3425
- 2              0.4967        0.4967
- 3              0.5354        0.5354
- 4              1.0411        1.0411
- 5              1.8397        1.8397
+ 1              0.3632        0.3632
+ 2              0.5176        0.5176
+ 3              0.5888        0.5888
+ 4              1.0885        1.0885
+ 5              1.9899        1.9899
     q    Empirical       Fitted
 ------------------------------------
-  1%      -1.0553      -0.9076
-  5%      -0.5656      -0.5805
- 10%      -0.3787      -0.3967
- 25%      -0.0494      -0.0735
- 50%       0.2930       0.3069
- 75%       0.6956       0.7115
- 90%       1.1299       1.1117
- 95%       1.4122       1.3860
- 99%       2.0292       2.0693
+  1%      -0.9340      -0.9640
+  5%      -0.5762      -0.5594
+ 10%      -0.3580      -0.3638
+ 25%      -0.0466      -0.0472
+ 50%       0.3120       0.3128
+ 75%       0.7292       0.7186
+ 90%       1.1688       1.1686
+ 95%       1.4537       1.4715
+ 99%       2.1226       2.0723
 ```
 
 ### Maximum Likelihood Estimation (MLE)
