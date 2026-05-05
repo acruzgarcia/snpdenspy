@@ -310,7 +310,9 @@ diagnose_fit(
     compare_kde=True)
 ```
 
-It also ilustrates the use of the function `diagnose_fit`, which provides some goodness-of-fit statistics as the (KS) or Cramér-von Mises (CVM) and analisis of the input empirical distribution versus the fitted one. The output of the previous code is as below.
+It also ilustrates the use of the function `diagnose_fit`, which provides some goodness-of-fit statistics as the (KS) or Cramér-von Mises (CVM) and analisis of the input empirical distribution versus the fitted one. It also plots the histogram of the input data together with the fitted density, and optionally with the density used to generate the data (`pdf_original_func`) and the fit provided by `stats.gaussian_kde` (which uses the Silverman's rule for the bandwidth). 
+
+The output of the previous code is as below.
 
 ```python
 === NIG(a=3, b=1) ===
@@ -341,9 +343,11 @@ Moment order  Empirical raw moment  Fitted raw moment
  99%       2.1226       2.0723
 ```
 
+![alt text](https://github.com/acruzgarcia/snpdenspy/blob/main/images/Fit_MM_NIG.png)
+
 ### Maximum Likelihood Estimation (MLE)
 
-The superior fitting method, implementing the Maximum Likelihhode Approach from Gallant-Nychka. It maximizes the log-likelihood function with respect to the coefficients, location, and scale parameters.
+This other fitting algortihm implements the Maximum Likelihhode Approach suggested by Gallant-Nychka. It maximizes the log-likelihood function with respect to the coefficients, location, and scale parameters.
 
 Key options:
 - `fit_loc` and `fit_scale`: Control whether to estimate location and scale parameters
@@ -351,10 +355,7 @@ Key options:
 - `loc_scale_fn`: Allow fitting using externally provided mean and variance functions (useful for time series analysis)
 - `loc_scale_params0`, `loc_scale_bounds`: Initial values and bounds for external parameters
 
-Usage:
 ```python
-dist = SNPDistribution(K=5)
-c_fit, loc_fit, scale_fit = dist.fit_mle(data, fit_loc=True, fit_scale=True)
 ```
 
 For advanced usage with external location/scale functions:
