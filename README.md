@@ -353,7 +353,7 @@ Moment order  Empirical raw moment  Fitted raw moment
 
 ### Maximum Likelihood Estimation (MLE)
 
-This other fitting algortihm implements the Maximum Likelihhode Approach suggested by Gallant-Nychka. It maximizes the log-likelihood function with respect to the coefficients, location, and scale parameters.
+This other fitting algortihm implements the Maximum Likelihood Approach suggested by Gallant-Nychka. It maximizes the log-likelihood function with respect to the coefficients, location, and scale parameters.
 
 Key options:
 - `fit_loc` and `fit_scale`: Control whether to estimate location and scale parameters

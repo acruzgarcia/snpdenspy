@@ -120,17 +120,17 @@ if __name__ == "__main__":
 
     method, pol_degree = 'mle', 8
     distributions_and_fit = [
-        #("Gaussian mixture", sample_gaussian_mixture, pdf_mixture_eval, method, pol_degree ),
-        #("Student's t (df=5)", sample_student_t, pdf_student_t_eval, method, pol_degree ),
-        #("Laplace(loc=0, scale=1.5)", sample_laplace, pdf_laplace_eval, method, pol_degree ),
-        #("Logistic(loc=0, scale=1)", sample_logistic, pdf_logistic_eval, method, pol_degree ),
-        #("Skew-normal(a=8)", sample_skewnorm, pdf_skewnorm_eval, method, pol_degree ),
-        #("NIG(a=3, b=1)", sample_nig, pdf_nig_eval, method, pol_degree ),
-        #("Generalized Hyperbolic(p=1, a=1.5, b=0.5)", sample_genhyperbolic, pdf_genhyperbolic_eval, method, pol_degree ),
+        ("Gaussian mixture", sample_gaussian_mixture, pdf_mixture_eval, method, pol_degree ),
+        ("Student's t (df=5)", sample_student_t, pdf_student_t_eval, method, pol_degree ),
+        ("Laplace(loc=0, scale=1.5)", sample_laplace, pdf_laplace_eval, method, pol_degree ),
+        ("Logistic(loc=0, scale=1)", sample_logistic, pdf_logistic_eval, method, pol_degree ),
+        ("Skew-normal(a=8)", sample_skewnorm, pdf_skewnorm_eval, method, pol_degree ),
+        ("NIG(a=3, b=1)", sample_nig, pdf_nig_eval, method, pol_degree ),
+        ("Generalized Hyperbolic(p=1, a=1.5, b=0.5)", sample_genhyperbolic, pdf_genhyperbolic_eval, method, pol_degree ),
         ("Skewed t (df=5, nc=3)", sample_skewt, pdf_skewt_eval, method, pol_degree ),
-        #("Chi(df=3)", sample_chi, pdf_chi_eval, method, pol_degree ),
-        #("Chi-squared(df=4)", sample_chi2, pdf_chi2_eval, method, pol_degree ),
-        #("Beta(a=2, b=5)", sample_beta, pdf_beta_eval, method, pol_degree  ),
+        ("Chi(df=3)", sample_chi, pdf_chi_eval, method, pol_degree ),
+        ("Chi-squared(df=4)", sample_chi2, pdf_chi2_eval, method, pol_degree ),
+        ("Beta(a=2, b=5)", sample_beta, pdf_beta_eval, method, pol_degree  ),
     ]
 
     for name, sampler, pdf_func, fit_method, K in distributions_and_fit:

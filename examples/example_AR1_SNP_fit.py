@@ -39,8 +39,8 @@ if __name__ == "__main__":
 
     # Generate noise
     np.random.seed(42)
-    noise = t.rvs(df=3, size=nsamples)
-    noise = (noise - noise.mean()) / noise.std(ddof=0)
+    noise = t.rvs(df=7, size=nsamples)
+    noise = (noise - noise.mean()) / noise.std(ddof=1)  # standardize to mean 0 and variance 1
     
     # First simulate the distribution according to the parameters
     x = np.zeros(shape=(noise.shape))
@@ -83,25 +83,16 @@ if __name__ == "__main__":
 
     q_norm = stats.norm.ppf(probs)
     q_snp = SNPDistribution(K=K)(c=c_hat).ppf(probs)
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-
-    ax0 = axes[0]
-    ax0.plot(q_norm, emp_norm, "o", markersize=3, alpha=0.6)
-    q_min = min(q_norm.min(), emp_norm.min())
-    q_max = max(q_norm.max(), emp_norm.max())
-    ax0.plot([q_min, q_max], [q_min, q_max], "--", color="gray", linewidth=1)
-    ax0.set_title("QQ: residuals vs Normal")
-    ax0.set_xlabel("Normal quantiles")
-    ax0.set_ylabel("Empirical residual quantiles")
-
-    ax1 = axes[1]
-    ax1.plot(q_snp, emp_snp, "o", markersize=3, alpha=0.6)
-    q_min = min(q_snp.min(), emp_snp.min())
-    q_max = max(q_snp.max(), emp_snp.max())
-    ax1.plot([q_min, q_max], [q_min, q_max], "--", color="gray", linewidth=1)
-    ax1.set_title("QQ: residuals vs SNP")
-    ax1.set_xlabel("SNP quantiles")
-    ax1.set_ylabel("Empirical residual quantiles")
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.plot(q_norm, emp_norm, "o", markersize=3, alpha=0.6, label="Normal fit")
+    ax.plot(q_snp, emp_snp, "x", markersize=3, alpha=0.6, label="SNP fit")
+    q_min = min(q_norm.min(), emp_norm.min(), q_snp.min(), emp_snp.min())
+    q_max = max(q_norm.max(), emp_norm.max(), q_snp.max(), emp_snp.max())
+    ax.plot([q_min, q_max], [q_min, q_max], "--", color="gray", linewidth=1)
+    ax.set_title("QQ: standardized residuals")
+    ax.set_xlabel("Theoretical quantiles")
+    ax.set_ylabel("Empirical residual quantiles")
+    ax.legend()
 
     fig.tight_layout()
     plt.show()
