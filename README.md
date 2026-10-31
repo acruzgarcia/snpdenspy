@@ -421,6 +421,8 @@ result = dist.fit_mle(
 external_params = result['external_params']
 ```
 
+Please check this [notebook](notebooks/example_AR1_t_noise_fit.ipynb) for an example of fitting an AR(1) with SNP disturbance.
+
 Enjoy!
 
 
