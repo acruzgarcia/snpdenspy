@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snpdenspy"
+version = "0.1.0"
+description = "Nonparametric statistical methods for probability density estimation"
+keywords = ["nonparametric statistics", "density estimation", "probability density functions", "SNP"]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Alberto Cruz Garcia", email = "a.cruz.garcia@gmail.com" },
+]
+dependencies = [
+    "numpy>=1.20.0",
+    "scipy>=1.7.0",
+    "matplotlib>=3.3.0",
+    "scikit-learn>=1.0.0",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "pytest-cov>=2.0",
+    "black>=21.0",
+    "flake8>=3.8",
+    "mypy>=0.900",
+]
+
+[project.urls]
+Homepage = "https://github.com/acruzgarcia/snpdenspy"
+Repository = "https://github.com/acruzgarcia/snpdenspy"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["snpdenspy*"]
