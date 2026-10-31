@@ -16,7 +16,7 @@ and the implementation of this package is mainly based on
 
 The package implements the theoretical framework suggested in the paper. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions. It additionally provides efficient evaluation and manipulation of Hermite polynomials, as well as bidirectional transformations between Hermite and monomial bases.
 
-This Python package is intended to provide an efficient tool to estimate, evaluate, and sample SNP densities as an alternative to other nonparametric approaches (i.e. KDE), as well as to provide an easy way to integrate these densities into more complex models, such as a time series one.
+This Python package is intended to provide an efficient tool to estimate, evaluate, and sample SNP densities, offering an alternative to other nonparametric approaches (i.e. the well-known KDE), as well as to provide an easy way to integrate these densities into more complex models, such as a time series one.
 
 ## SNP Distributions' key benefits
 
