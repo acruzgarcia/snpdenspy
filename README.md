@@ -6,7 +6,7 @@
 
 ## Introduction
 
-The `snpdenspy` package provides a Python implementation for the family of probability density functions known as semi-nonparametric (SNP). This family of densities arose from the seminal work
+The `snpdenspy` package provides a Python implementation for the family of probability density functions known as semi-nonparametric (SNP). This family of densities arose from the seminal work in
 
 - *Gallant & Nychka 1987, Semi-Nonparametric Maximum Likelihood Estimation*.
 
@@ -14,9 +14,9 @@ and the implementation of this package is mainly based on
 
 - *Gallant & Tauchen 1990, A nonparametric approach to nonlinear time series analysis: estimation and simulation*. 
 
-The package implements the theoretical framework described in the paper and does not introduce new methodological contributions. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions. It additionally provides efficient evaluation and manipulation of Hermite polynomials, as well as bidirectional transformations between Hermite and monomial bases.
+The package implements the theoretical framework suggested in the paper. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions. It additionally provides efficient evaluation and manipulation of Hermite polynomials, as well as bidirectional transformations between Hermite and monomial bases.
 
-The package is intended as an alternative to existing nonparametric density estimation methods.
+This Python package is intended to provide an efficient tool to estimate, evaluate, and sample SNP densities as an alternative to other nonparametric approaches (i.e. KDE), as well as to provide an easy way to integrate these densities into more complex models, such as a time series one.
 
 ## SNP Distributions' key benefits
 
@@ -47,13 +47,19 @@ $$
 C = 1 + \sum_{k=1}^{K} c_k^2 k! 
 $$
 
-The Cumulative Density Function (CDF) is then
+The Cumulative Density Function (CDF) of $`Z`$ is then
 
 $$
 F_Z(z) = \Phi(z) - \frac{\phi(z)}{d_0} \sum_{n=1}^{2K} d_n H_{n-1}(z)
 $$
 
-where $`\Phi(z)`$ is the cumulative distribution of the standardard normal and $d_0, ..., d_{2K}$ are the Hermite coefficients of the expansion of $\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2$.
+where $`\Phi(z)`$ is the cumulative distribution of the standardard normal and $d_0, ..., d_{2K}$ are the Hermite coefficients of the Edgeworth expansion of $\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2$. That is,
+
+$$
+\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2 = \sum_{n=0}^{2K} d_n H_{n-1}(z)
+$$
+
+Note that by imposing $d_1 = d_2 = 0$ then the denstity has zero mean and unit variance. See *Alan Stuart & Keith Ord, Kendall's advanced theory of Statistics, Volume 1 Distribution Theory* for more details.
 
 Likewise, the $k$-th raw moment of the distribution is 
 
