@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "snpdenspy"
-version = "0.2.0"
+version = "0.3.0"
 description = "Nonparametric statistical methods for probability density estimation"
 keywords = ["nonparametric statistics", "density estimation", "probability density functions", "SNP"]
 readme = "README.md"
