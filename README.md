@@ -56,7 +56,7 @@ $$
 where $`\Phi(z)`$ is the cumulative distribution of the standardard normal and $d_0, ..., d_{2K}$ are the Hermite coefficients of the Edgeworth expansion of $\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2$. That is,
 
 $$
-\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2 = \sum_{n=0}^{2K} d_n H_{n-1}(z)
+\left(1 + \sum_{k=1}^{K} c_k H_k(z)\right)^2 = \sum_{n=0}^{2K} d_n H_{n}(z)
 $$
 
 Note that by imposing $d_1 = d_2 = 0$ then the denstity has zero mean and unit variance. See *Alan Stuart & Keith Ord, Kendall's advanced theory of Statistics, Volume 1 Distribution Theory* for more details.
@@ -64,7 +64,7 @@ Note that by imposing $d_1 = d_2 = 0$ then the denstity has zero mean and unit v
 Likewise, the $k$-th raw moment of the distribution is 
 
 $$
-E[Z^k] = \sum_{n=0}^{2K} d_n E_\phi[Z^k H_n(Z)]
+E[Z^k] = \frac{1}{d_0}\sum_{n=0}^{2K} d_n E_\phi[Z^k H_n(Z)]
 $$
 
 where $E_\phi[Z^k H_n(Z)]$ is the expectation under the standard normal distribution. This can be computed using the monomial expansion of the Hermite polynomial
@@ -94,7 +94,7 @@ $$
 and the raw moments of $X$ follow from the standardized moments of $Z$ via
 
 $$
-E[X^r] = \sum_{j=0}^{r} \binom{r}{j} \mu^{r-j} \sigma^j E_\phi[Z^j].
+E[X^r] = \sum_{j=0}^{r} \binom{r}{j} \mu^{r-j} \sigma^j E[Z^j].
 $$
 
 The formulation herein explained allows for flexible density shapes while maintaining analytical tractability and providing efficient evaluation of PDF, CDF and moments functions.
