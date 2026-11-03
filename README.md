@@ -4,6 +4,16 @@
 [![PyPI version fury.io](https://img.shields.io/pypi/v/snpdenspy.svg)](https://pypi.org/project/snpdenspy/)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/snpdenspy.svg)](https://www.python.org/)
 
+## Installation 
+
+The package is uploaded at https://pypi.org/project/snpdenspy/, so
+
+```python
+python -m pip install snpdenspy
+
+```
+from the command line will install the last version uploaded to pypi. 
+
 ## Introduction
 
 The `snpdenspy` package provides a Python implementation for the family of probability density functions known as semi-nonparametric (SNP). This family of densities arose from the seminal work in
