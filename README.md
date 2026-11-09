@@ -457,7 +457,7 @@ Normal-noise AR(1) MLE: phi=0.6947, sigma=0.2000
 SNP-noise AR(1) MLE: phi=0.6943, sigma=0.2001
 ```
 
-The following plot allows to visualize the two fits togheter, highlighting the additional accuracy on the tails provided by the SNP fit.
+The following plot allows to visualize the qqplots of the two fits together, highlighting the additional accuracy that the SNP fit provides on the tails.
 
 ```python
 # QQ plots for residuals vs assumed Normal and fitted SNP noise
