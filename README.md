@@ -14,9 +14,7 @@ and the implementation of this package is mainly based on
 
 - *Gallant & Tauchen 1990, A nonparametric approach to nonlinear time series analysis: estimation and simulation*. 
 
-The package implements the theoretical framework suggested in the paper. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions. It additionally provides efficient evaluation and manipulation of Hermite polynomials, as well as bidirectional transformations between Hermite and monomial bases.
-
-This Python package is intended to provide an efficient tool to estimate, evaluate, and sample SNP densities, offering an alternative to other nonparametric approaches (i.e. the well-known KDE), as well as to provide an easy way to integrate these densities into more complex models, such as a time series one.
+The package implements the theoretical framework suggested in the paper. It offers efficient computational tools for density estimation, fitting, and sampling from SNP distributions, which are a powerful alternative to other nonparametric approaches (i.e. KDE), as well as to provide an easy way to integrate these densities into more complex models, such as a time series one.
 
 ## SNP Distributions' key benefits
 
@@ -279,17 +277,23 @@ Time taken to generate 5000 samples via accept-reject: 0.0481 minutes
 
 ### Moment-Matching
 
-This method (not directly taken from the cited papers) estimates parameters by matching empirical moments to the theoretical moments of the SNP distribution.
+This method estimates the parameters by matching the empirical moments to the theoretical moments of the SNP distribution.
 
-The theoretical moments of the SNP Distribution are described in section *Mathematical Formulation* above. However the implementation of the package uses a more efficient way of calculating the expectations by using the following recurrence relation:
+The theoretical moments of the SNP Distribution are described in section *Mathematical Formulation* above. To accelerate the estimation, we precompute the Gaussian-weighted Hermite expectations
 
 $$
-E_\phi[Z^r H_n(Z)] = E_\phi[Z^{r-1} H_{n+1}(Z)] + r E_\phi[Z^{r-1} H_{n-1}(Z)], \quad r \geq 1
+A_{r,n}:=E_\phi[Z^rH_n(Z)],\qquad Z\sim N(0,1).
 $$
 
-with base cases $E_\phi[Z^0 H_0(Z)] = 1$ and $E_\phi[Z^0 H_n(Z)] = 0$ for $n > 0$.
+which depends only on $` r `$ and $` n `$, not on the data or SNP parameters. So Using $` zH_n(z)=H_{n+1}(z)+nH_{n-1}(z) `$, its entries satisfy
 
-This recurrence allows for the efficient computation of a table of expectations for multiple $r$ and $n$. 
+$$
+A_{r,n}=A_{r-1,n+1}+nA_{r-1,n-1},
+$$
+
+with $` A_{0,0}=1 `$, $` A_{0,n}=0 `$ for $` n>0 `$, and $` A_{r,0}=A_{r-1,1}`$.
+
+The table is therefore computed once before optimisation and reused at every iteration. During optimisation, only the coefficients \(d_n\) change.
 
 The following code ilustrates the use of the method `fit_moment_matching` over a sample of points generated from a Normal Inverse Gaussian. The option `fit_loc_scale` controls whether the mean and variance are optimized or the data is normalized.
 
@@ -361,67 +365,119 @@ Key options:
 - `loc_scale_fn`: Allow fitting using externally provided mean and variance functions (useful for time series analysis)
 - `loc_scale_params0`, `loc_scale_bounds`: Initial values and bounds for external parameters
 
-```python
-```
+The following code ilustrates the use of the advanced features of the method `fit_mle` over a sample of points generated from AR(1) time series with Student-t innovations.
 
-For advanced usage with external location/scale functions:
 ```python
-def loc_scale_fn(params, x):
-    # Custom function relating params to mean/variance
-    return mean, variance
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+from scipy.stats import t
 
-c_fit, loc_fit, scale_fit = dist.fit_mle(
-    data, 
-    loc_scale_fn=loc_scale_fn,
-    loc_scale_params0=[0.1, 0.2],
-    loc_scale_bounds=[(-1, 1), (0.01, 10)]
+from snpdenspy.snp.snp_distribution import SNPDistribution
+from snpdenspy.util.diagnose.diagnose_fit import diagnose_fit
+
+# Parameters
+phi = 0.7
+sigma = 0.2
+nsamples = 10000
+
+# Generate standardized Student-t(7) innovations
+np.random.seed(42)
+noise = t.rvs(df=7, size=nsamples)
+noise = (noise - noise.mean()) / noise.std(ddof=1)
+
+# Simulate the AR(1) series with disturbance sigma * noise
+x = np.zeros(shape=noise.shape)
+x[0] = noise[0]
+for i in range(1, len(x)):
+    x[i] = phi * x[i - 1] + sigma * noise[i]
+
+def ar1_loc_scale(theta, x):
+    phi, log_sigma = theta
+    y = np.asarray(x)
+    loc = phi * np.concatenate([[0.0], y[:-1]])
+    scale = np.exp(log_sigma)
+    return loc, scale
+
+
+def ar1_gaussian_mle(x):
+    """
+    MLE for AR(1) with Gaussian noise and zero intercept.
+    """
+    y = np.asarray(x, dtype=float)
+    x_lag = y[:-1]
+    x_curr = y[1:]
+    denom = float(np.dot(x_lag, x_lag))
+    if denom == 0.0:
+        raise ValueError("Cannot estimate AR(1) when lagged values are all zero.")
+    phi_hat = float(np.dot(x_curr, x_lag) / denom)
+    resid = x_curr - phi_hat * x_lag
+    sigma_hat = float(np.sqrt(np.mean(resid ** 2)))
+    return phi_hat, sigma_hat
+
+# Normal fit
+phi_norm, sigma_norm = ar1_gaussian_mle(x)
+print(f"Normal-noise AR(1) MLE: phi={phi_norm:.4f}, sigma={sigma_norm:.4f}")
+
+# SNP fit
+K = 6
+dist = SNPDistribution(K=K)
+theta0 = np.array([0.1, np.log(np.std(x, ddof=1))])
+
+res = dist.fit_mle(
+    x=x,
+    fit_loc=False, fit_scale=False,          # loc/scale driven by model
+    loc_scale_fn=ar1_loc_scale,
+    constrain_std_moments=True,
+    loc_scale_params0=theta0,
+    return_opt_result=True,
+    method="L-BFGS-B",
 )
+c_hat = res["c"]
+theta_hat = res["external_params"]
+phi_snp, sigma_snp = theta_hat[0], np.exp(theta_hat[1])
+loc_hat, scale_hat = res["loc"], res["scale"]
+print(f"SNP-noise AR(1) MLE: phi={phi_snp:.4f}, sigma={sigma_snp:.4f}")
 ```
 
-## Usage Examples
-
-### Advanced Usage with SNPDistribution
+which it will display:
 
 ```python
-from snpdenspy.snp import SNPDistribution
-
-# Create distribution with arbitrary coefficients
-dist = SNPDistribution(K=10)
-
-# Fit to data using MLE
-data = np.random.normal(0, 1, 1000)  # Example data
-c_fit, loc_fit, scale_fit = dist.fit_mle(data)
-
-# Create frozen distribution
-frozen_dist = dist.freeze(c_fit, loc_fit, scale_fit)
-
-# Evaluate and sample
-pdf_vals = frozen_dist.pdf(x)
-samples = frozen_dist.rvs(size=1000)
+Normal-noise AR(1) MLE: phi=0.6947, sigma=0.2000
+SNP-noise AR(1) MLE: phi=0.6943, sigma=0.2001
 ```
 
-### Fitting with External Location/Scale
+The following plot allows to visualize the two fits togheter, highlighting the additional accuracy on the tails provided by the SNP fit.
 
 ```python
-# Example: Fit with known relationship between parameters and moments
-def loc_scale_fn(params, x):
-    alpha, beta = params
-    mean = alpha * np.mean(x)
-    variance = beta * np.var(x)
-    return mean, variance
+# QQ plots for residuals vs assumed Normal and fitted SNP noise
+eps_norm = (x[1:] - phi_norm * x[:-1]) / sigma_norm
+eps_snp = (x[1:] - phi_snp * x[:-1]) / sigma_snp
 
-dist = SNPDistribution(K=5)
-result = dist.fit_mle(
-    data,
-    loc_scale_fn=loc_scale_fn,
-    loc_scale_params0=[1.0, 1.0],
-    return_opt_result=True
-)
-# Access fitted external parameters
-external_params = result['external_params']
+probs = (np.arange(1, len(eps_norm) + 1) - 0.5) / len(eps_norm)
+emp_norm = np.sort(eps_norm)
+emp_snp = np.sort(eps_snp)
+
+q_norm = stats.norm.ppf(probs)
+q_snp = SNPDistribution(K=K)(c=c_hat).ppf(probs)
+fig, ax = plt.subplots(figsize=(6, 6))
+ax.plot(q_norm, emp_norm, "o", markersize=3, alpha=0.6, label="Normal fit")
+ax.plot(q_snp, emp_snp, "x", markersize=3, alpha=0.6, label="SNP fit")
+q_min = min(q_norm.min(), emp_norm.min(), q_snp.min(), emp_snp.min())
+q_max = max(q_norm.max(), emp_norm.max(), q_snp.max(), emp_snp.max())
+ax.plot([q_min, q_max], [q_min, q_max], "--", color="gray", linewidth=1)
+ax.set_title("QQ: standardized residuals")
+ax.set_xlabel("Theoretical quantiles")
+ax.set_ylabel("Empirical residual quantiles")
+ax.legend()
+
+fig.tight_layout()
+plt.show()
 ```
 
-Please check this [notebook](notebooks/example_AR1_t_noise_fit.ipynb) for an example of fitting an AR(1) with SNP disturbance.
+![alt text](https://github.com/acruzgarcia/snpdenspy/blob/main/images/qqplots_AR1.png)
+
+Please check the [notebooks](notebooks/) and [examples](examples/) for more examples.
 
 Enjoy!
 
